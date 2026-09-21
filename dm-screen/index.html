@@ -6,13 +6,13 @@
     <title>D&D 5e DM Screen - Initiative & Condition Tracker</title>
     <style>
         * { box-sizing: border-box; }
-        html { overflow-x: hidden; }
+        html { overflow-x: hidden; touch-action: pan-x pan-y pinch-zoom; }
         body { font-family: Arial, sans-serif; background: #232323; color: #eee; margin: 0; padding: 0; }
         .container { width: min(1100px, calc(100% - 32px)); margin: 30px auto; background: #333; padding: 24px; border-radius: 10px; box-shadow: 0 0 10px #111; }
         h1, h2 { color: #ffd700; }
         h1 { font-size: clamp(2rem, 7vw, 2.8rem); }
         h2 { font-size: clamp(1.35rem, 4vw, 1.8rem); }
-        .table-scroll { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch; }
+        .table-scroll { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch; touch-action: pan-x pinch-zoom; }
         table { width: 100%; min-width: 900px; border-collapse: collapse; margin-bottom: 0; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
         th { background: #444; }

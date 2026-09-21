@@ -7,10 +7,11 @@
 }
 
 * { box-sizing: border-box; }
-html { overflow-x: hidden; }
+html { min-height: 100%; overflow-x: hidden; touch-action: pan-x pan-y pinch-zoom; background: var(--paper); }
 body {
   margin: 0;
   min-width: 320px;
+  min-height: 100svh;
   color: var(--ink);
   background: var(--paper);
   font-family: Georgia, 'Times New Roman', serif;
@@ -30,4 +31,9 @@ h2 { margin: 0 0 18px; font-size: 14px; font-weight: 400; letter-spacing: .08em;
   h1 { font-size: clamp(40px, 14vw, 60px); }
   header p { font-size: 16px; }
   .tool-list a { padding: 18px 8px; font-size: 18px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .page-shell { padding-top: 40px; padding-bottom: 48px; }
+  header { padding-bottom: 24px; }
+  section { padding-top: 34px; }
 }
