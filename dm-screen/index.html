@@ -118,7 +118,8 @@
     <script>
         const themeToggle = document.getElementById('theme-toggle');
         const savedTheme = localStorage.getItem('jp-domain-theme');
-        if (savedTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
         const updateThemeToggle = () => {
             const dark = document.documentElement.dataset.theme === 'dark';
             themeToggle.textContent = dark ? '☾' : '☀';
