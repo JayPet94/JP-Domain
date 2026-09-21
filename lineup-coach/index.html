@@ -79,6 +79,10 @@
     const savedTheme = localStorage.getItem('jp-domain-theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     document.documentElement.dataset.theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    fetch('/api/data').then(response => response.ok ? response.json() : null).then(result => {
+      if (!savedTheme && result?.data?.theme) document.documentElement.dataset.theme = result.data.theme;
+      updateThemeToggle();
+    }).catch(() => {});
     const updateThemeToggle = () => {
       const dark = document.documentElement.dataset.theme === 'dark';
       themeToggle.textContent = dark ? '☾' : '☀';
@@ -89,7 +93,9 @@
     themeToggle.addEventListener('click', () => {
       const dark = document.documentElement.dataset.theme === 'dark';
       document.documentElement.dataset.theme = dark ? 'light' : 'dark';
-      localStorage.setItem('jp-domain-theme', dark ? 'light' : 'dark');
+      const theme = dark ? 'light' : 'dark';
+      localStorage.setItem('jp-domain-theme', theme);
+      fetch('/api/data', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) }).catch(() => {});
       updateThemeToggle();
     });
     updateThemeToggle();

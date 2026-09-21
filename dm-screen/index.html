@@ -29,6 +29,9 @@
         .cond-dropdown-menu { background: var(--card) !important; border-color: var(--line) !important; color: var(--ink); }
         .back-link { display: inline-block; margin-bottom: 18px; color: var(--teal); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; }
         .theme-toggle { float: right; width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font: 20px/1 'Space Grotesk', sans-serif; }
+        .campaign-bar { display:flex; align-items:end; gap:10px; margin:18px 0 28px; padding:16px; border:1px solid var(--line); background:var(--card); }
+        .campaign-bar label { display:flex; flex:1; flex-direction:column; gap:6px; color:var(--muted); font:500 11px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
+        .campaign-bar select { width:100%; padding:10px; border:1px solid var(--line); background:var(--input); color:var(--ink); font:14px 'DM Mono',monospace; }
         button { min-height: 36px; }
         @media (max-width: 600px) {
             .container { width: calc(100% - 20px); margin: 10px auto; padding: 16px; }
@@ -37,6 +40,7 @@
             .table-scroll { margin-right: -16px; padding-right: 16px; }
             th, td { padding: 6px; }
             button { max-width: 100%; }
+            .campaign-bar { align-items:stretch; flex-direction:column; }
         }
     </style>
 </head>
@@ -45,6 +49,12 @@
         <a class="back-link" href="../">&larr; Back to Tools</a>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
         <h1>D&D 5e DM Screen</h1>
+        <div class="campaign-bar">
+            <label for="campaign-select">Campaign
+                <select id="campaign-select" aria-label="Select campaign"></select>
+            </label>
+            <button id="new-campaign" type="button">New campaign</button>
+        </div>
         <div class="flex" style="flex-direction:column; gap:0;">
             <div style="min-width:340px; margin-bottom:32px;">
                 <h2>Players</h2>
@@ -120,6 +130,10 @@
         const savedTheme = localStorage.getItem('jp-domain-theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.documentElement.dataset.theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+        fetch('/api/data').then(response => response.ok ? response.json() : null).then(result => {
+            if (!savedTheme && result?.data?.theme) document.documentElement.dataset.theme = result.data.theme;
+            updateThemeToggle();
+        }).catch(() => {});
         const updateThemeToggle = () => {
             const dark = document.documentElement.dataset.theme === 'dark';
             themeToggle.textContent = dark ? '☾' : '☀';
@@ -130,7 +144,9 @@
         themeToggle.addEventListener('click', () => {
             const dark = document.documentElement.dataset.theme === 'dark';
             document.documentElement.dataset.theme = dark ? 'light' : 'dark';
-            localStorage.setItem('jp-domain-theme', dark ? 'light' : 'dark');
+            const theme = dark ? 'light' : 'dark';
+            localStorage.setItem('jp-domain-theme', theme);
+            fetch('/api/data', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) }).catch(() => {});
             updateThemeToggle();
         });
         updateThemeToggle();
@@ -139,6 +155,9 @@
         let players = [];
         let npcs = [];
         let npcBackup = [];
+        let campaigns = {};
+        let activeCampaignId = 'default';
+        let remoteData = {};
         const builtinConditions = [
             "Blinded", "Charmed", "Deafened", "Frightened", "Grappled", "Incapacitated",
             "Invisible", "Paralyzed", "Petrified", "Poisoned", "Prone", "Restrained",
@@ -155,15 +174,55 @@
                 return [];
             }
         }
+        function campaignSnapshot() { return { players, npcs }; }
+        function restoreCampaign(id) {
+            const campaign = campaigns[id] || { players: [], npcs: [] };
+            activeCampaignId = id;
+            players = Array.isArray(campaign.players) ? campaign.players : [];
+            npcs = Array.isArray(campaign.npcs) ? campaign.npcs : [];
+            npcBackup = [];
+        }
+        function renderCampaigns() {
+            const select = document.getElementById('campaign-select');
+            select.replaceChildren();
+            Object.keys(campaigns).forEach(id => select.add(new Option(campaigns[id].name || id, id)));
+            select.value = activeCampaignId;
+        }
+        async function saveRemoteScreen() {
+            remoteData = { ...remoteData, dmScreen: { activeCampaignId, campaigns } };
+            try { await fetch('/api/data', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(remoteData) }); } catch { /* local-only mode */ }
+        }
 
         // --- Save/Load Data ---
         function saveData() {
+            campaigns[activeCampaignId] = { ...campaignSnapshot(), name: campaigns[activeCampaignId]?.name || 'Default campaign' };
+            localStorage.setItem('dmScreenCampaigns', JSON.stringify({ activeCampaignId, campaigns }));
             localStorage.setItem('dmScreenPlayers', JSON.stringify(players));
             localStorage.setItem('dmScreenNpcs', JSON.stringify(npcs));
+            saveRemoteScreen();
         }
         function loadData() {
-            players = readStoredArray('dmScreenPlayers');
-            npcs = readStoredArray('dmScreenNpcs');
+            try {
+                const stored = JSON.parse(localStorage.getItem('dmScreenCampaigns') || '{}');
+                campaigns = stored.campaigns && typeof stored.campaigns === 'object' ? stored.campaigns : {};
+                activeCampaignId = stored.activeCampaignId || 'default';
+            } catch { campaigns = {}; }
+            if (!Object.keys(campaigns).length) campaigns = { default: { name: 'Default campaign', players: readStoredArray('dmScreenPlayers'), npcs: readStoredArray('dmScreenNpcs') } };
+            if (!campaigns[activeCampaignId]) activeCampaignId = Object.keys(campaigns)[0];
+            restoreCampaign(activeCampaignId);
+        }
+        async function loadRemoteScreen() {
+            try {
+                const response = await fetch('/api/data');
+                if (!response.ok) return;
+                remoteData = (await response.json()).data || {};
+                if (remoteData.dmScreen?.campaigns && typeof remoteData.dmScreen.campaigns === 'object') {
+                    campaigns = remoteData.dmScreen.campaigns;
+                    activeCampaignId = remoteData.dmScreen.activeCampaignId || Object.keys(campaigns)[0];
+                    restoreCampaign(activeCampaignId);
+                    renderCampaigns(); renderPlayers(); renderNPCs(); renderInitiativeList();
+                }
+            } catch { /* local-only mode */ }
         }
 
         // --- Player Tracker ---
@@ -414,10 +473,31 @@
                 });
             }
         }
+        document.getElementById('campaign-select').addEventListener('change', () => {
+            saveData();
+            restoreCampaign(document.getElementById('campaign-select').value);
+            renderPlayers();
+            renderNPCs();
+            renderInitiativeList();
+        });
+        document.getElementById('new-campaign').addEventListener('click', () => {
+            const name = prompt('Campaign name:');
+            if (!name?.trim()) return;
+            const id = `campaign-${Date.now()}`;
+            campaigns[id] = { name: name.trim(), players: [], npcs: [] };
+            restoreCampaign(id);
+            renderCampaigns();
+            renderPlayers();
+            renderNPCs();
+            renderInitiativeList();
+            saveData();
+        });
         // --- Initial Render ---
         loadData();
+        renderCampaigns();
         renderPlayers();
         renderNPCs();
+        loadRemoteScreen();
     </script>
 </body>
 </html>

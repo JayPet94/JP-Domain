@@ -14,6 +14,20 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, character 
 let savedInputs = {};
 try { savedInputs = JSON.parse(localStorage.getItem('lineup-coach-inputs') || '{}') || {}; } catch { savedInputs = {}; }
 if (savedInputs.leagueUrl) $('league-url').value = savedInputs.leagueUrl;
+let remoteData = {};
+async function loadRemoteProfile() {
+  try {
+    const response = await fetch('/api/data');
+    if (!response.ok) return;
+    remoteData = (await response.json()).data || {};
+    if (!savedInputs.leagueUrl && remoteData.sleeperUsername) $('league-url').value = remoteData.sleeperUsername;
+  } catch { /* local-only mode */ }
+}
+async function saveRemoteProfile(data) {
+  remoteData = { ...remoteData, ...data };
+  try { await fetch('/api/data', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(remoteData) }); } catch { /* local-only mode */ }
+}
+loadRemoteProfile();
 
 function usernameFromInput(value) {
   const input = value.trim();
@@ -248,6 +262,7 @@ $('league-form').addEventListener('submit', async (event) => {
   try {
     const input = $('league-url').value.trim();
     localStorage.setItem('lineup-coach-inputs', JSON.stringify({ leagueUrl: input }));
+    saveRemoteProfile({ sleeperUsername: input });
     const username = usernameFromInput(input);
     if (!username) throw new Error('Enter a valid Sleeper username.');
     message('Finding leagues for that username…', 'loading');

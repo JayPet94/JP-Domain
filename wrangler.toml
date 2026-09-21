@@ -1,5 +1,10 @@
 name = "jp-domain"
 compatibility_date = "2026-09-21"
+main = "worker.js"
 
 [assets]
 directory = "."
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "YOUR_KV_NAMESPACE_ID"
