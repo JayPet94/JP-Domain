@@ -5,19 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D 5e DM Screen - Initiative & Condition Tracker</title>
     <style>
+        * { box-sizing: border-box; }
+        html { overflow-x: hidden; }
         body { font-family: Arial, sans-serif; background: #232323; color: #eee; margin: 0; padding: 0; }
-        .container { max-width: 1100px; margin: 30px auto; background: #333; padding: 24px; border-radius: 10px; box-shadow: 0 0 10px #111; }
+        .container { width: min(1100px, calc(100% - 32px)); margin: 30px auto; background: #333; padding: 24px; border-radius: 10px; box-shadow: 0 0 10px #111; }
         h1, h2 { color: #ffd700; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        h1 { font-size: clamp(2rem, 7vw, 2.8rem); }
+        h2 { font-size: clamp(1.35rem, 4vw, 1.8rem); }
+        .table-scroll { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 900px; border-collapse: collapse; margin-bottom: 0; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
         th { background: #444; }
-        input[type="text"], input[type="number"] { width: 90%; padding: 4px; background: #222; color: #ffd700; border: 1px solid #555; border-radius: 4px; }
+        input[type="text"], input[type="number"] { width: 90%; max-width: 180px; padding: 7px 4px; background: #222; color: #ffd700; border: 1px solid #555; border-radius: 4px; }
         input[type="number"].hp-input { width: 70px !important; font-size: 1.1em; }
         button { background: #ffd700; color: #222; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; margin: 2px; }
         button:hover { background: #fff176; }
         .flex { display: flex; gap: 32px; flex-wrap: wrap; }
         @media (max-width: 900px) { .flex { flex-direction: column; } }
-        .conditions-list details { margin-bottom: 8px; }
+        .conditions-list details { margin-bottom: 8px; line-height: 1.45; }
+        button { min-height: 36px; }
+        @media (max-width: 600px) {
+            .container { width: calc(100% - 20px); margin: 10px auto; padding: 16px; }
+            .flex { gap: 20px; }
+            .flex > div { min-width: 0 !important; width: 100%; margin-bottom: 20px !important; }
+            .table-scroll { margin-right: -16px; padding-right: 16px; }
+            th, td { padding: 6px; }
+            button { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -26,6 +40,7 @@
         <div class="flex" style="flex-direction:column; gap:0;">
             <div style="min-width:340px; margin-bottom:32px;">
                 <h2>Players</h2>
+                <div class="table-scroll">
                 <table id="playerTable">
                     <thead>
                         <tr>
@@ -42,10 +57,12 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                </div>
                 <button onclick="addPlayer()">Add Player</button>
             </div>
             <div style="min-width:340px;">
                 <h2>NPCs / Enemies</h2>
+                <div class="table-scroll">
                 <table id="npcTable">
                     <thead>
                         <tr>
@@ -62,6 +79,7 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                </div>
                 <button onclick="addNPC()">Add NPC/Enemy</button>
                 <button onclick="clearAllNPCs()" style="background:#ff4444; margin-left:8px;">Clear All NPCs</button>
                 <button id="undoNpcButton" onclick="undoClearNPCs()" style="background:#ffaa44; margin-left:4px; display:none;">↺ Undo</button>
