@@ -10,6 +10,7 @@
 <body>
   <main class="page-shell">
     <header>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
       <h1>Assorted Tools</h1>
       <p>A collection of small tools and utilities.</p>
     </header>
@@ -28,5 +29,24 @@
       </nav>
     </section>
   </main>
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('jp-domain-theme');
+    if (savedTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+    const updateThemeToggle = () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      themeToggle.textContent = dark ? '☾' : '☀';
+      themeToggle.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to night mode');
+      themeToggle.title = dark ? 'Switch to light mode' : 'Switch to night mode';
+      themeToggle.setAttribute('aria-pressed', String(dark));
+    };
+    themeToggle.addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+      localStorage.setItem('jp-domain-theme', dark ? 'light' : 'dark');
+      updateThemeToggle();
+    });
+    updateThemeToggle();
+  </script>
 </body>
 </html>

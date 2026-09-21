@@ -8,6 +8,7 @@
 </head>
 <body>
   <main class="shell">
+    <div class="utility-row"><a class="back-link" href="../">&larr; Back to Tools</a><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button></div>
     <header class="masthead">
       <div class="kicker">WEEKLY FANTASY FOOTBALL</div>
       <h1>Lineup <em>Coach</em></h1>
@@ -23,37 +24,32 @@
         <span class="status-dot" aria-hidden="true"></span>
       </div>
       <form id="league-form">
-        <label for="league-url">Sleeper league link or league number</label>
+        <label for="league-url">Sleeper username</label>
         <div class="input-row">
-          <input id="league-url" name="league-url" type="text" inputmode="url" autocomplete="url" placeholder="https://sleeper.com/leagues/... or 1310482091862945792" required>
+          <input id="league-url" name="league-url" type="text" inputmode="text" autocomplete="username" placeholder="Enter your Sleeper username" autofocus required>
+          <button id="league-submit" type="submit" class="button button-dark"><span>Find leagues</span><span aria-hidden="true">↗</span></button>
         </div>
-        <label for="username-select">League username</label>
+        <label id="league-select-label" for="league-select" class="hidden">Choose a league</label>
+        <div class="input-row hidden" id="league-select-row">
+          <select id="league-select" name="league-select" disabled>
+            <option value="">Find leagues with a username first</option>
+          </select>
+        </div>
+        <label for="username-select">Team username</label>
         <div class="input-row">
-          <select id="username-select" name="username-select" required disabled>
+          <select id="username-select" name="username-select" autocomplete="off" required disabled>
             <option value="">Connect a league first</option>
           </select>
-          <button type="submit" class="button button-dark"><span>Load league</span><span aria-hidden="true">↗</span></button>
         </div>
-        <p class="field-note">Read-only access. Your link stays in this browser.</p>
+        <p class="field-note">Read-only access. Your username stays in this browser. Choose a league below to switch between leagues.</p>
       </form>
       <div id="league-message" class="message" role="status" aria-live="polite"></div>
-    </section>
-
-    <section id="team-panel" class="panel team-panel hidden" aria-labelledby="team-title">
-      <div class="panel-heading compact-heading">
-        <div>
-          <span class="eyebrow">02 / YOUR TEAM</span>
-          <h2 id="team-title">Team ready</h2>
-        </div>
-      </div>
-      <div class="league-meta" id="league-meta"></div>
-      <button id="analyze-button" type="button" class="button button-accent">Build my lineup <span aria-hidden="true">→</span></button>
     </section>
 
     <section id="results" class="results hidden" aria-live="polite">
       <div class="results-head">
         <div>
-          <span class="eyebrow">03 / RECOMMENDATION</span>
+          <span class="eyebrow">02 / TEAM VIEW</span>
           <h2 id="results-title">Your best lineup</h2>
         </div>
         <div class="freshness" id="freshness"></div>
@@ -78,5 +74,24 @@
   </main>
   <script src="tiers-half-ppr.js"></script>
   <script src="app.js"></script>
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('jp-domain-theme');
+    if (savedTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+    const updateThemeToggle = () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      themeToggle.textContent = dark ? '☾' : '☀';
+      themeToggle.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to night mode');
+      themeToggle.title = dark ? 'Switch to light mode' : 'Switch to night mode';
+      themeToggle.setAttribute('aria-pressed', String(dark));
+    };
+    themeToggle.addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+      localStorage.setItem('jp-domain-theme', dark ? 'light' : 'dark');
+      updateThemeToggle();
+    });
+    updateThemeToggle();
+  </script>
 </body>
 </html>

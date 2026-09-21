@@ -6,17 +6,33 @@ const TIER_URLS = {
 };
 const TIER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aeCDrRHeqY2oLdrcqfirsl4bjca3pcjUg3RP5fJrtyc/export?format=csv';
 
-const state = { league: null, rosters: [], allRosters: [], users: [], players: null, tiers: new Map(), season: null };
+const state = { league: null, rosters: [], allRosters: [], users: [], players: null, tiers: new Map(), season: null, leagueOptions: [], leagueOptionsUsername: null };
 const $ = (id) => document.getElementById(id);
 const message = (text, type = '') => { $('league-message').textContent = text; $('league-message').className = `message ${type}`; };
 const api = async (path) => { const response = await fetch(`${API}${path}`); if (!response.ok) throw new Error(`Sleeper returned ${response.status}`); return response.json(); };
-const savedInputs = JSON.parse(localStorage.getItem('lineup-coach-inputs') || '{}');
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+let savedInputs = {};
+try { savedInputs = JSON.parse(localStorage.getItem('lineup-coach-inputs') || '{}') || {}; } catch { savedInputs = {}; }
 if (savedInputs.leagueUrl) $('league-url').value = savedInputs.leagueUrl;
 
-function leagueIdFromInput(value) {
+function usernameFromInput(value) {
   const input = value.trim();
-  const match = input.match(/(?:league|leagues)[^0-9]*(\d{10,})/i) || input.match(/^(\d{10,})$/);
-  return match ? match[1] : null;
+  return input && !input.includes('/') && !/\s/.test(input) ? input : null;
+}
+function leagueOptionLabel(league) {
+  return `${escapeHtml(league.name || 'Unnamed league')} · ${escapeHtml(league.season || 'season unknown')}`;
+}
+function setSubmitLabel(label) {
+  $('league-submit').innerHTML = `<span>${label}</span><span aria-hidden="true">↗</span>`;
+}
+function resetLeagueOptions() {
+  state.leagueOptions = [];
+  state.leagueOptionsUsername = null;
+  $('league-select').innerHTML = '<option value="">Find leagues with a username first</option>';
+  $('league-select').disabled = true;
+  $('league-select-row').classList.add('hidden');
+  $('league-select-label').classList.add('hidden');
+  setSubmitLabel('Find leagues');
 }
 function csvRows(text) {
   return text.trim().split(/\r?\n/).slice(1).map(line => {
@@ -177,40 +193,80 @@ function renderResults(roster, slots, lineupResult, usedScoring) {
   $('warning').textContent = unmatched.length ? `${unmatched.length} roster item(s) could not be matched to Sleeper's player database.` : '';
   $('lineup-grid').innerHTML = lineupResult ? lineupResult.lineup.map(({slot, player}) => {
     const tier = player.tier;
-    return `<article class="lineup-card"><div class="slot">${slotName(slot)}</div><div class="tier"><span class="tier-mark">${tier?.tier ?? '—'}</span> Tier</div><div class="player-name">${displayName(player)}</div><div class="player-sub">${player.position} · ${tier ? `rank ${tier.rank}` : 'no tier match'}</div></article>`;
+    return `<article class="lineup-card"><div class="slot">${escapeHtml(slotName(slot))}</div><div class="tier"><span class="tier-mark">${escapeHtml(tier?.tier ?? '—')}</span> Tier</div><div class="player-name">${escapeHtml(displayName(player))}</div><div class="player-sub">${escapeHtml(player.position)} · ${tier ? `rank ${escapeHtml(tier.rank)}` : 'no tier match'}</div></article>`;
   }).join('') : '<p>No legal lineup could be built from this roster and its slots.</p>';
-  $('bench-list').innerHTML = missing.map(player => `<div class="bench-player">${displayName(player)} <span>${player.position} · ${!isAvailable(player) ? availabilityLabel(player) : player.tier ? `T${player.tier.tier}` : 'unranked'}</span></div>`).join('') || '<span class="player-sub">No bench players.</span>';
+  $('bench-list').innerHTML = missing.map(player => `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(player.position)} · ${escapeHtml(!isAvailable(player) ? availabilityLabel(player) : player.tier ? `T${player.tier.tier}` : 'unranked')}</span></div>`).join('') || '<span class="player-sub">No bench players.</span>';
   const upgrades = freeAgentUpgrades(roster);
-  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${freeAgent.name}<span>${freeAgent.position} · Tier ${freeAgent.tier.tier} · rank ${freeAgent.rank}</span></div><div class="waiver-upgrade">Better than<br>${worse.name} · Tier ${worse.tier.tier}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
+  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank)}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · Tier ${escapeHtml(worse.tier.tier)}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
 }
 
-$('league-form').addEventListener('submit', async (event) => {
-  event.preventDefault(); $('team-panel').classList.add('hidden'); $('results').classList.add('hidden'); message('Loading league, rosters, and player data…', 'loading');
-  try {
-    const leagueUrl = $('league-url').value.trim();
-    const leagueId = leagueIdFromInput(leagueUrl);
-    localStorage.setItem('lineup-coach-inputs', JSON.stringify({ leagueUrl }));
-    if (!leagueId) throw new Error('Enter a Sleeper league link or the numeric league ID.');
-    const [league, rosters, users] = await Promise.all([api(`/league/${leagueId}`), api(`/league/${leagueId}/rosters`), api(`/league/${leagueId}/users`)]);
-    const usernameSelect = $('username-select');
-    usernameSelect.innerHTML = users.map(user => `<option value="${user.user_id}">${user.username || user.display_name}</option>`).join('');
-    usernameSelect.disabled = false;
-    state.league = league; state.rosters = rosters; state.allRosters = rosters; state.users = users; state.players = await api('/players/nfl');
-    $('league-meta').innerHTML = `<span class="meta-chip">${league.name}</span><span class="meta-chip">${league.season} season</span><span class="meta-chip">${users.length} usernames found</span>`;
-    $('team-panel').classList.remove('hidden'); message('League connected. Choose a username, then build the recommendation.');
-  } catch (error) { message(error.message || 'Could not load that league.', 'error'); }
-});
+async function loadLeague(leagueId) {
+  message('Loading league, rosters, and player data…', 'loading');
+  const [league, rosters, users] = await Promise.all([api(`/league/${leagueId}`), api(`/league/${leagueId}/rosters`), api(`/league/${leagueId}/users`)]);
+  const usernameSelect = $('username-select');
+  usernameSelect.replaceChildren(new Option('Select a team', '', true, true));
+  users.forEach(user => usernameSelect.add(new Option(user.username || user.display_name, user.user_id)));
+  usernameSelect.selectedIndex = 0;
+  usernameSelect.value = '';
+  usernameSelect.disabled = false;
+  state.league = league; state.rosters = rosters; state.allRosters = rosters; state.users = users; state.players = await api('/players/nfl');
+  $('results').classList.add('hidden'); message('League connected. Choose a team username to view its information.');
+}
 
-$('analyze-button').addEventListener('click', async () => {
-  const userId = $('username-select').value;
+async function showTeamInfo(userId) {
   const roster = state.rosters.find(item => item.owner_id === userId);
-  if (!roster) { message('Choose a username with a roster before building.', 'error'); return; }
+  if (!roster) { $('results').classList.add('hidden'); message('That username does not have a roster in this league.', 'error'); return; }
   const user = state.users.find(item => item.user_id === userId);
-  roster.teamName = user?.metadata?.team_name || user?.display_name || user?.username || `Roster ${roster.roster_id}`;
-  $('analyze-button').disabled = true; $('analyze-button').textContent = 'Building…';
+  const teamName = user?.metadata?.team_name || user?.display_name || user?.username || `Roster ${roster.roster_id}`;
+  roster.teamName = teamName;
+  $('results').classList.add('hidden');
+  message('Loading team information…', 'loading');
   try {
     const usedScoring = await loadTiers(scoringFormat(state.league));
-    const players = buildPlayers(roster); const slots = state.league.roster_positions.filter(slot => !['BN','IR','TAXI'].includes(slot));
+    const players = buildPlayers(roster);
+    const slots = state.league.roster_positions.filter(slot => !['BN', 'IR', 'TAXI'].includes(slot));
     renderResults(roster, slots, bestLineup(players, slots), usedScoring);
-  } catch (error) { message(error.message || 'Could not build the lineup.', 'error'); } finally { $('analyze-button').disabled = false; $('analyze-button').innerHTML = 'Build my lineup <span aria-hidden="true">→</span>'; }
+    message(`${teamName} loaded.`);
+  } catch (error) { message(error.message || 'Could not load that team.', 'error'); }
+}
+
+$('league-url').addEventListener('input', () => {
+  if ($('league-url').value.trim() !== state.leagueOptionsUsername) resetLeagueOptions();
+});
+
+$('league-select').addEventListener('change', async () => {
+  if (!$('league-select').value) return;
+  try { await loadLeague($('league-select').value); } catch (error) { message(error.message || 'Could not load that league.', 'error'); }
+});
+
+$('username-select').addEventListener('change', () => {
+  if ($('username-select').value) showTeamInfo($('username-select').value);
+});
+
+$('league-form').addEventListener('submit', async (event) => {
+  event.preventDefault(); $('results').classList.add('hidden');
+  try {
+    const input = $('league-url').value.trim();
+    localStorage.setItem('lineup-coach-inputs', JSON.stringify({ leagueUrl: input }));
+    const username = usernameFromInput(input);
+    if (!username) throw new Error('Enter a valid Sleeper username.');
+    message('Finding leagues for that username…', 'loading');
+    const user = await api(`/user/${encodeURIComponent(username)}`);
+    if (!user?.user_id) throw new Error('Sleeper username not found.');
+    const season = new Date().getFullYear();
+    let leagues = await api(`/user/${user.user_id}/leagues/nfl/${season}`);
+    if (!leagues.length) leagues = await api(`/user/${user.user_id}/leagues/nfl/${season - 1}`);
+    if (!leagues.length) throw new Error('No NFL leagues found for that username.');
+    state.leagueOptions = leagues;
+    state.leagueOptionsUsername = input;
+    const leagueSelect = $('league-select');
+    leagueSelect.innerHTML = leagues.map(league => `<option value="${league.league_id}">${leagueOptionLabel(league)}</option>`).join('');
+    leagueSelect.disabled = false;
+    $('league-select-row').classList.remove('hidden');
+    $('league-select-label').classList.remove('hidden');
+    setSubmitLabel('Find leagues');
+    leagueSelect.value = leagues[0].league_id;
+    await loadLeague(leagues[0].league_id);
+    message(`${leagues.length} league${leagues.length === 1 ? '' : 's'} found. Select a team or switch leagues.`);
+  } catch (error) { message(error.message || 'Could not find that league.', 'error'); }
 });
