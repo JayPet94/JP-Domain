@@ -3,7 +3,7 @@
   --muted: #6b756f;
   --paper: #f5f3ec;
   --line: #d4d8d0;
-  --accent: #e2edc8;
+  --accent: #c6e4c7;
   --button: #1f2926;
   --button-ink: #f5f3ec;
 }
@@ -13,7 +13,7 @@ html[data-theme="dark"] {
   --muted: #a5b5ad;
   --paper: #17201e;
   --line: #3b4b45;
-  --accent: #33482f;
+  --accent: #2f5a42;
   --button: #e8f0eb;
   --button-ink: #17201e;
 }
