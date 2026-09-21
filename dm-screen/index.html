@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5e DM Screen - Initiative & Condition Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #232323; color: #eee; margin: 0; padding: 0; }
+        .container { max-width: 1100px; margin: 30px auto; background: #333; padding: 24px; border-radius: 10px; box-shadow: 0 0 10px #111; }
+        h1, h2 { color: #ffd700; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: center; }
+        th { background: #444; }
+        input[type="text"], input[type="number"] { width: 90%; padding: 4px; background: #222; color: #ffd700; border: 1px solid #555; border-radius: 4px; }
+        input[type="number"].hp-input { width: 70px !important; font-size: 1.1em; }
+        button { background: #ffd700; color: #222; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; margin: 2px; }
+        button:hover { background: #fff176; }
+        .flex { display: flex; gap: 32px; flex-wrap: wrap; }
+        @media (max-width: 900px) { .flex { flex-direction: column; } }
+        .conditions-list details { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>D&D 5e DM Screen</h1>
+        <div class="flex" style="flex-direction:column; gap:0;">
+            <div style="min-width:340px; margin-bottom:32px;">
+                <h2>Players</h2>
+                <table id="playerTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>HP</th>
+                            <th>Max HP</th>
+                            <th>Initiative</th>
+                            <th>Passive Perception</th>
+                            <th>Passive Insight</th>
+                            <th>Conditions</th>
+                            <th>Damage</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button onclick="addPlayer()">Add Player</button>
+            </div>
+            <div style="min-width:340px;">
+                <h2>NPCs / Enemies</h2>
+                <table id="npcTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>HP</th>
+                            <th>Max HP</th>
+                            <th>Initiative</th>
+                            <th>Passive Perception</th>
+                            <th>Passive Insight</th>
+                            <th>Conditions</th>
+                            <th>Damage</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button onclick="addNPC()">Add NPC/Enemy</button>
+                <button onclick="clearAllNPCs()" style="background:#ff4444; margin-left:8px;">Clear All NPCs</button>
+                <button id="undoNpcButton" onclick="undoClearNPCs()" style="background:#ffaa44; margin-left:4px; display:none;">↺ Undo</button>
+            </div>
+        </div>
+        <h2>Initiative Order</h2>
+        <ul id="initiativeList" style="background:#222; border:1px solid #444; border-radius:6px; padding:12px; min-height:40px; list-style:none; margin-top:10px;"></ul>
+        <button onclick="renderInitiativeList()">Update Initiative Order</button>
+        <hr style="margin:32px 0; border:1px solid #444;">
+        <div class="conditions-list">
+            <h2>5e Conditions Reference</h2>
+            <details open><summary>Blinded</summary><div>Can't see, fails any ability check that requires sight, attack rolls against have advantage, attack rolls have disadvantage.</div></details>
+            <details><summary>Charmed</summary><div>Can't attack charmer, charmer has advantage on social checks.</div></details>
+            <details><summary>Deafened</summary><div>Can't hear, fails any ability check that requires hearing.</div></details>
+            <details><summary>Frightened</summary><div>Disadvantage on ability checks and attack rolls while source of fear is in line of sight, can't willingly move closer.</div></details>
+            <details><summary>Grappled</summary><div>Speed becomes 0, ends if grappler is incapacitated or removed from reach.</div></details>
+            <details><summary>Incapacitated</summary><div>Can't take actions or reactions.</div></details>
+            <details><summary>Invisible</summary><div>Can't be seen, can attempt to hide, attacks have advantage, attacks against have disadvantage.</div></details>
+            <details><summary>Paralyzed</summary><div>Incapacitated, can't move or speak, fails STR/DEX saves, attacks have advantage, critical if within 5 ft.</div></details>
+            <details><summary>Petrified</summary><div>Transformed into stone, incapacitated, immune to poison/disease, resistant to all damage.</div></details>
+            <details><summary>Poisoned</summary><div>Disadvantage on attack rolls and ability checks.</div></details>
+            <details><summary>Prone</summary><div>Only movement is crawl, disadvantage on attacks, attacks against within 5 ft have advantage, others have disadvantage.</div></details>
+            <details><summary>Restrained</summary><div>Speed 0, attacks against have advantage, attacks have disadvantage, disadvantage on DEX saves.</div></details>
+            <details><summary>Stunned</summary><div>Incapacitated, can't move, can speak only falteringly, fails STR/DEX saves, attacks have advantage.</div></details>
+            <details><summary>Unconscious</summary><div>Incapacitated, can't move or speak, unaware, drops whatever holding, prone, fails STR/DEX saves, attacks have advantage, critical if within 5 ft.</div></details>
+        </div>
+    </div>
+    <script>
+        // --- Data ---
+        let players = [];
+        let npcs = [];
+        let npcBackup = [];
+        const builtinConditions = [
+            "Blinded", "Charmed", "Deafened", "Frightened", "Grappled", "Incapacitated",
+            "Invisible", "Paralyzed", "Petrified", "Poisoned", "Prone", "Restrained",
+            "Stunned", "Unconscious"
+        ];
+
+        // --- Save/Load Data ---
+        function saveData() {
+            localStorage.setItem('dmScreenPlayers', JSON.stringify(players));
+            localStorage.setItem('dmScreenNpcs', JSON.stringify(npcs));
+        }
+        function loadData() {
+            const p = localStorage.getItem('dmScreenPlayers');
+            if (p) players = JSON.parse(p);
+            const n = localStorage.getItem('dmScreenNpcs');
+            if (n) npcs = JSON.parse(n);
+        }
+
+        // --- Player Tracker ---
+        function renderPlayers() {
+            const tbody = document.querySelector('#playerTable tbody');
+            tbody.innerHTML = '';
+            players.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${p.name||''}" onchange="updatePlayer(${i}, 'name', this.value)"></td>
+                    <td><input type="number" class="hp-input" value="${p.hp||0}" min="0" onchange="updatePlayer(${i}, 'hp', this.value)"></td>
+                    <td><input type="number" class="hp-input" value="${p.maxhp||0}" min="0" onchange="updatePlayer(${i}, 'maxhp', this.value)"></td>
+                    <td><input type="number" value="${p.init||''}" min="-99" onchange="updatePlayer(${i}, 'init', this.value)"></td>
+                    <td><input type="number" value="${p.pp||10}" min="0" onchange="updatePlayer(${i}, 'pp', this.value)"></td>
+                    <td><input type="number" value="${p.pi||10}" min="0" onchange="updatePlayer(${i}, 'pi', this.value)"></td>
+                    <td>
+                        <div class="dropdown-conditions" style="position:relative;">
+                            <button type="button" onclick="toggleCondDropdown('player',${i})" style="width:90%;">Select Conditions</button>
+                            <div id="player-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
+                                ${builtinConditions.map(cond => `
+                                    <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(p.conditions) && p.conditions.includes(cond) ? 'checked' : ''} onchange='togglePlayerCond(${i}, this.value, this.checked)'> ${cond}</label>
+                                `).join('')}
+                                <label style='display:block; padding:2px 8px;'><input type='checkbox' value='Other' ${Array.isArray(p.conditions) && p.conditions.some(c => !builtinConditions.includes(c)) ? 'checked' : ''} onchange='togglePlayerCond(${i}, "Other", this.checked)'> Other...</label>
+                            </div>
+                            <input type="text" id="player-cond-other-${i}" style="width:90%; margin-top:2px; display:${Array.isArray(p.conditions) && p.conditions.some(c => !builtinConditions.includes(c)) ? 'block' : 'none'}" value="${Array.isArray(p.conditions) ? p.conditions.filter(c => !builtinConditions.includes(c)).join(', ') : ''}" placeholder="Custom condition(s), comma separated" onchange="updatePlayerOtherCondition(${i}, this.value)">
+                            <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${Array.isArray(p.conditions) ? p.conditions.join(', ') : (p.conditions || '')}</div>
+                        </div>
+                    </td>
+                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button onclick="applyPlayerDamage(${i})">Apply</button></td>
+                    <td><button onclick="removePlayer(${i})">X</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        function addPlayer() {
+            players.push({ name: '', hp: 0, maxhp: 0, init: '', pp: 10, pi: 10, conditions: [] });
+            renderPlayers();
+            saveData();
+        }
+        function updatePlayer(idx, field, value) {
+            if (["hp","pp","pi","init","maxhp"].includes(field)) value = parseInt(value) || 0;
+            players[idx][field] = value;
+            saveData();
+        }
+        function removePlayer(idx) {
+            players.splice(idx, 1);
+            renderPlayers();
+            saveData();
+        }
+        function applyPlayerDamage(idx) {
+            const dmg = parseInt(document.getElementById('player-dmg-'+idx).value)||0;
+            let hp = parseInt(players[idx].hp)||0;
+            let maxhp = parseInt(players[idx].maxhp)||0;
+            if (dmg !== 0) {
+                if (dmg > 0) {
+                    hp = Math.max(0, hp - dmg);
+                } else {
+                    hp = maxhp > 0 ? Math.min(hp - dmg, maxhp) : hp - dmg;
+                }
+                players[idx].hp = hp;
+                renderPlayers();
+                renderInitiativeList();
+                saveData();
+            }
+        }
+        function togglePlayerCond(idx, cond, checked) {
+            let arr = Array.isArray(players[idx].conditions) ? [...players[idx].conditions] : [];
+            if (cond === 'Other') {
+                if (checked) {
+                    if (!arr.some(c => !builtinConditions.includes(c))) arr.push('');
+                    document.getElementById('player-cond-other-'+idx).style.display = 'block';
+                } else {
+                    arr = arr.filter(c => builtinConditions.includes(c));
+                    document.getElementById('player-cond-other-'+idx).style.display = 'none';
+                }
+            } else {
+                if (checked) {
+                    if (!arr.includes(cond)) arr.push(cond);
+                } else {
+                    arr = arr.filter(c => c !== cond);
+                }
+            }
+            players[idx].conditions = arr;
+            renderPlayers();
+            renderInitiativeList();
+            saveData();
+        }
+        function updatePlayerOtherCondition(idx, value) {
+            let arr = Array.isArray(players[idx].conditions) ? players[idx].conditions.filter(c => builtinConditions.includes(c)) : [];
+            if (value) arr = [...arr, ...value.split(',').map(s => s.trim()).filter(Boolean)];
+            players[idx].conditions = arr;
+            renderPlayers();
+            renderInitiativeList();
+            saveData();
+        }
+
+        // --- NPC Tracker ---
+        function renderNPCs() {
+            const tbody = document.querySelector('#npcTable tbody');
+            tbody.innerHTML = '';
+            npcs.forEach((n, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${n.name||''}" onchange="updateNPC(${i}, 'name', this.value)"></td>
+                    <td><input type="number" class="hp-input" value="${n.hp||0}" min="0" onchange="updateNPC(${i}, 'hp', this.value)"></td>
+                    <td><input type="number" class="hp-input" value="${n.maxhp||0}" min="0" onchange="updateNPC(${i}, 'maxhp', this.value)"></td>
+                    <td><input type="number" value="${n.init||''}" min="-99" onchange="updateNPC(${i}, 'init', this.value)"></td>
+                    <td><input type="number" value="${n.pp||10}" min="0" onchange="updateNPC(${i}, 'pp', this.value)"></td>
+                    <td><input type="number" value="${n.pi||10}" min="0" onchange="updateNPC(${i}, 'pi', this.value)"></td>
+                    <td>
+                        <div class="dropdown-conditions" style="position:relative;">
+                            <button type="button" onclick="toggleCondDropdown('npc',${i})" style="width:90%;">Select Conditions</button>
+                            <div id="npc-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
+                                ${builtinConditions.map(cond => `
+                                    <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(n.conditions) && n.conditions.includes(cond) ? 'checked' : ''} onchange='toggleNPCCond(${i}, this.value, this.checked)'> ${cond}</label>
+                                `).join('')}
+                                <label style='display:block; padding:2px 8px;'><input type='checkbox' value='Other' ${Array.isArray(n.conditions) && n.conditions.some(c => !builtinConditions.includes(c)) ? 'checked' : ''} onchange='toggleNPCCond(${i}, "Other", this.checked)'> Other...</label>
+                            </div>
+                            <input type="text" id="npc-cond-other-${i}" style="width:90%; margin-top:2px; display:${Array.isArray(n.conditions) && n.conditions.some(c => !builtinConditions.includes(c)) ? 'block' : 'none'}" value="${Array.isArray(n.conditions) ? n.conditions.filter(c => !builtinConditions.includes(c)).join(', ') : ''}" placeholder="Custom condition(s), comma separated" onchange="updateNPCOtherCondition(${i}, this.value)">
+                            <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${Array.isArray(n.conditions) ? n.conditions.join(', ') : (n.conditions || '')}</div>
+                        </div>
+                    </td>
+                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button onclick="applyNPCDamage(${i})">Apply</button></td>
+                    <td><button onclick="removeNPC(${i})">X</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        function addNPC() {
+            npcs.push({ name: '', hp: 0, maxhp: 0, init: '', pp: 10, pi: 10, conditions: [] });
+            renderNPCs();
+            saveData();
+        }
+        function updateNPC(idx, field, value) {
+            if (["hp","pp","pi","init","maxhp"].includes(field)) value = parseInt(value) || 0;
+            npcs[idx][field] = value;
+            saveData();
+        }
+        function removeNPC(idx) {
+            npcs.splice(idx, 1);
+            renderNPCs();
+            saveData();
+        }
+        function clearAllNPCs() {
+            npcBackup = JSON.parse(JSON.stringify(npcs));
+            npcs = [];
+            renderNPCs();
+            renderInitiativeList();
+            saveData();
+            document.getElementById('undoNpcButton').style.display = 'inline-block';
+        }
+        function undoClearNPCs() {
+            npcs = [...JSON.parse(JSON.stringify(npcBackup)), ...npcs];
+            npcBackup = [];
+            renderNPCs();
+            renderInitiativeList();
+            saveData();
+            document.getElementById('undoNpcButton').style.display = 'none';
+        }
+        function applyNPCDamage(idx) {
+            const dmg = parseInt(document.getElementById('npc-dmg-'+idx).value)||0;
+            let hp = parseInt(npcs[idx].hp)||0;
+            let maxhp = parseInt(npcs[idx].maxhp)||0;
+            if (dmg !== 0) {
+                if (dmg > 0) {
+                    hp = Math.max(0, hp - dmg);
+                } else {
+                    hp = maxhp > 0 ? Math.min(hp - dmg, maxhp) : hp - dmg;
+                }
+                npcs[idx].hp = hp;
+                renderNPCs();
+                renderInitiativeList();
+                saveData();
+            }
+        }
+        function toggleNPCCond(idx, cond, checked) {
+            let arr = Array.isArray(npcs[idx].conditions) ? [...npcs[idx].conditions] : [];
+            if (cond === 'Other') {
+                if (checked) {
+                    if (!arr.some(c => !builtinConditions.includes(c))) arr.push('');
+                    document.getElementById('npc-cond-other-'+idx).style.display = 'block';
+                } else {
+                    arr = arr.filter(c => builtinConditions.includes(c));
+                    document.getElementById('npc-cond-other-'+idx).style.display = 'none';
+                }
+            } else {
+                if (checked) {
+                    if (!arr.includes(cond)) arr.push(cond);
+                } else {
+                    arr = arr.filter(c => c !== cond);
+                }
+            }
+            npcs[idx].conditions = arr;
+            renderNPCs();
+            renderInitiativeList();
+            saveData();
+        }
+        function updateNPCOtherCondition(idx, value) {
+            let arr = Array.isArray(npcs[idx].conditions) ? npcs[idx].conditions.filter(c => builtinConditions.includes(c)) : [];
+            if (value) arr = [...arr, ...value.split(',').map(s => s.trim()).filter(Boolean)];
+            npcs[idx].conditions = arr;
+            renderNPCs();
+            renderInitiativeList();
+            saveData();
+        }
+
+        // --- Initiative Order ---
+        function renderInitiativeList() {
+            document.getElementById('undoNpcButton').style.display = 'none';
+            const list = document.getElementById('initiativeList');
+            const combined = [
+                ...players.filter(p => p.name && p.init !== '' && !isNaN(p.init)).map(p => ({ type:'Player', ...p })),
+                ...npcs.filter(n => n.name && n.init !== '' && !isNaN(n.init)).map(n => ({ type:'NPC', ...n }))
+            ];
+            combined.sort((a, b) => b.init - a.init);
+            list.innerHTML = '';
+            if (combined.length === 0) {
+                list.innerHTML = '<li style="color:#888;">No entries yet.</li>';
+                return;
+            }
+            combined.forEach(entry => {
+                list.innerHTML += `<li><b>${entry.init}</b>: ${entry.name} (${entry.hp} HP${entry.conditions ? ' | ' + entry.conditions : ''})</li>`;
+            });
+        }
+        // --- For conditions dropdown not closing ---
+        function toggleCondDropdown(type, idx) {
+            const id = type === 'player' ? `player-cond-dropdown-${idx}` : `npc-cond-dropdown-${idx}`;
+            const menu = document.getElementById(id);
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            setTimeout(() => {
+                document.addEventListener('mousedown', function handler(e) {
+                    if (!menu.contains(e.target) && e.target !== menu.previousElementSibling) {
+                        menu.style.display = 'none';
+                        document.removeEventListener('mousedown', handler);
+                    }
+                });
+            }, 10);
+            if (menu) {
+                menu.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+                    cb.addEventListener('click', function(e) { e.stopPropagation(); });
+                });
+                menu.querySelectorAll('label').forEach(label => {
+                    label.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+                    label.addEventListener('click', function(e) { e.stopPropagation(); });
+                });
+            }
+        }
+        // --- Initial Render ---
+        loadData();
+        renderPlayers();
+        renderNPCs();
+    </script>
+</body>
+</html>

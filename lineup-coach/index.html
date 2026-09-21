@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lineup Coach</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="kicker">WEEKLY FANTASY FOOTBALL</div>
+      <h1>Lineup <em>Coach</em></h1>
+      <p class="lede">Turn your Sleeper roster into a clear start/sit decision using live Boris Chen tiers.</p>
+    </header>
+
+    <section class="panel setup-panel" aria-labelledby="setup-title">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">01 / CONNECT</span>
+          <h2 id="setup-title">Bring in your league</h2>
+        </div>
+        <span class="status-dot" aria-hidden="true"></span>
+      </div>
+      <form id="league-form">
+        <label for="league-url">Sleeper league link</label>
+        <div class="input-row">
+          <input id="league-url" name="league-url" type="url" placeholder="https://sleeper.com/leagues/1310482091862945792" required>
+        </div>
+        <label for="username-select">League username</label>
+        <div class="input-row">
+          <select id="username-select" name="username-select" required disabled>
+            <option value="">Connect a league first</option>
+          </select>
+          <button type="submit" class="button button-dark"><span>Load league</span><span aria-hidden="true">↗</span></button>
+        </div>
+        <p class="field-note">Read-only access. Your link stays in this browser.</p>
+      </form>
+      <div id="league-message" class="message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="team-panel" class="panel team-panel hidden" aria-labelledby="team-title">
+      <div class="panel-heading compact-heading">
+        <div>
+          <span class="eyebrow">02 / YOUR TEAM</span>
+          <h2 id="team-title">Team ready</h2>
+        </div>
+      </div>
+      <div class="league-meta" id="league-meta"></div>
+      <button id="analyze-button" type="button" class="button button-accent">Build my lineup <span aria-hidden="true">→</span></button>
+    </section>
+
+    <section id="results" class="results hidden" aria-live="polite">
+      <div class="results-head">
+        <div>
+          <span class="eyebrow">03 / RECOMMENDATION</span>
+          <h2 id="results-title">Your best lineup</h2>
+        </div>
+        <div class="freshness" id="freshness"></div>
+      </div>
+      <div id="warning" class="warning hidden"></div>
+      <div id="lineup-grid" class="lineup-grid"></div>
+      <div class="bench-section">
+        <div class="section-label">Bench</div>
+        <div id="bench-list" class="bench-list"></div>
+      </div>
+      <div class="waiver-section">
+        <div class="section-label">Free-agent upgrades</div>
+        <p class="waiver-note">Top 50 available players at each position, compared with your roster.</p>
+        <div id="waiver-list" class="waiver-list"></div>
+      </div>
+    </section>
+
+    <footer>
+      <span>Tier data: Boris Chen / FantasyPros consensus</span>
+      <span>Sleeper API is read-only</span>
+    </footer>
+  </main>
+  <script src="tiers-half-ppr.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
