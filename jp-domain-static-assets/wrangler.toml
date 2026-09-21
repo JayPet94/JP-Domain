@@ -1,0 +1,11 @@
+name = "jp-domain"
+compatibility_date = "2026-09-21"
+
+[assets]
+directory = "./public/"
+binding = "ASSETS"
+run_worker_first = true
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "bb7490359c0748cf86e93e0c99a45946"
