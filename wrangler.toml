@@ -7,4 +7,4 @@ directory = "."
 
 [[kv_namespaces]]
 binding = "AUTH_KV"
-id = "YOUR_KV_NAMESPACE_ID"
+id = "bb7490359c0748cf86e93e0c99a45946"
