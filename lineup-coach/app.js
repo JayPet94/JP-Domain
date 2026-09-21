@@ -14,7 +14,8 @@ const savedInputs = JSON.parse(localStorage.getItem('lineup-coach-inputs') || '{
 if (savedInputs.leagueUrl) $('league-url').value = savedInputs.leagueUrl;
 
 function leagueIdFromInput(value) {
-  const match = value.trim().match(/(?:league|leagues)[^0-9]*(\d{10,})/i) || value.trim().match(/\b(\d{10,})\b/);
+  const input = value.trim();
+  const match = input.match(/(?:league|leagues)[^0-9]*(\d{10,})/i) || input.match(/^(\d{10,})$/);
   return match ? match[1] : null;
 }
 function csvRows(text) {
@@ -189,7 +190,7 @@ $('league-form').addEventListener('submit', async (event) => {
     const leagueUrl = $('league-url').value.trim();
     const leagueId = leagueIdFromInput(leagueUrl);
     localStorage.setItem('lineup-coach-inputs', JSON.stringify({ leagueUrl }));
-    if (!leagueId) throw new Error('Enter a valid Sleeper league link.');
+    if (!leagueId) throw new Error('Enter a Sleeper league link or the numeric league ID.');
     const [league, rosters, users] = await Promise.all([api(`/league/${leagueId}`), api(`/league/${leagueId}/rosters`), api(`/league/${leagueId}/users`)]);
     const usernameSelect = $('username-select');
     usernameSelect.innerHTML = users.map(user => `<option value="${user.user_id}">${user.username || user.display_name}</option>`).join('');
