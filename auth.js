@@ -4,7 +4,7 @@
 
   const returnUrl = () => `${location.pathname}${location.search}${location.hash}`;
   const navigateToLogin = () => {
-    location.href = `/cdn-cgi/access/login?redirect_url=${encodeURIComponent(returnUrl())}`;
+    location.href = location.href = `https://jasonpetti.com/login`;
   };
   const navigateToLogout = () => {
     location.href = `/cdn-cgi/access/logout?redirect_url=${encodeURIComponent(returnUrl())}`;
