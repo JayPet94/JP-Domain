@@ -1,38 +1,34 @@
 # JP-Domain
 
-Cloudflare Worker with static assets and two browser-based tools:
+JP-Domain is a lightweight personal site and utility hub built around practical tools for fantasy football and tabletop play.
 
-- `/lineup-coach/` loads a Sleeper league and builds a fantasy football lineup.
-- `/dm-screen/` provides a local-only tabletop DM screen.
+## What this site is for
 
-## Cloudflare deployment with Wrangler
+This project serves as a small collection of browser-based utilities for real-world planning and game management:
 
-1. Push this repository to GitHub.
-2. In Cloudflare, create a Worker connected to this repository using **Workers Builds**.
-3. Use these build settings:
-	- **Deploy command:** `npx wrangler deploy`
-	- **Root directory:** `/`
-4. Deploy. The root `index.html` is the site entry point, and `wrangler.toml` tells Wrangler to upload the repository root as static assets.
+- `/` is the landing page and home for the site.
+- `/lineup-coach/` helps a fantasy football manager turn a roster into a clear start/sit decision by comparing players against tier data and team context.
+- `/dm-screen/` is a D&D 5e encounter tracker for keeping initiative, HP, conditions, and combat notes organized during play.
 
-For Cloudflare Pages instead, use **Workers & Pages > Create application > Pages > Connect to Git**, choose **None** as the framework, leave the build command blank, and set the output directory to `/`. Do not use `npx wrangler deploy` as a Pages build command; that command is for Workers deployments.
+## Core tools
 
-There is no build step. The Lineup Coach calls the Sleeper API and tier-data sources from the browser, so its behavior depends on those services allowing browser requests. Without Cloudflare Access and KV configured, both tools fall back to browser `localStorage`.
+### Lineup Coach
+The Lineup Coach is designed to help someone quickly evaluate a fantasy lineup. It pulls in league and roster information, compares players against tier recommendations, and surfaces a clean recommendation view for weekly decisions.
 
-## Optional user data sync with Access and KV
+### DM Screen
+The DM Screen is a utility for running tabletop combat sessions. It helps keep track of:
 
-The repository includes `worker.js`, which exposes an authenticated `GET/PATCH /api/data` endpoint. It stores one JSON record per Cloudflare Access identity in Workers KV. The pages continue working locally with `localStorage` when Access or KV is unavailable.
+- player and NPC initiative order
+- HP and max HP
+- passive perception and insight
+- conditions and status effects
+- damage application and quick adjustments
+- campaign-based record keeping in the browser
 
-To enable sync:
+## Design intent
 
-1. Create a Workers KV namespace.
-2. Put its namespace ID in `wrangler.toml` in place of `YOUR_KV_NAMESPACE_ID`.
-3. Protect the deployed hostname with Cloudflare Access. The Worker expects Access to provide the authenticated identity headers; do not expose `/api/data` without Access protection.
-4. Use `npx wrangler deploy` from the repository root.
+The site is intentionally compact and functional: useful tools first, with a consistent visual system, dark/light mode support, and a simple utility row for navigation and login state.
 
-The Lineup Coach syncs the user's Sleeper username. The DM Screen syncs named campaigns, the active campaign, players, NPCs, conditions, HP, and initiative state. Passwords are never stored by this project; authentication belongs to Cloudflare Access. KV is appropriate here because each user's data is retrieved by one identity key rather than queried relationally.
+## Notes
 
-For local testing, serve the repository root with any static server, for example:
-
-```sh
-python3 -m http.server 8000
-```
+The project is built to run as a Cloudflare Worker with static assets, and it includes secure Access-based user data storage where configured. The goal is not to be a large app framework; it is a focused set of tools that are easy to use while gaming or planning.
