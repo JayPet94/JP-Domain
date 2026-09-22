@@ -68,7 +68,9 @@ input:focus,select:focus { border-color:var(--teal); box-shadow:0 0 0 3px #d7e8d
 .lineup-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(245px,1fr)); gap:10px; margin-top:26px; }
 .lineup-card { border:1px solid var(--line); background:var(--card); min-height:125px; padding:16px; position:relative; min-width:0; }
 .slot { color:var(--teal); font:500 11px 'DM Mono',monospace; text-transform:uppercase; }
-.player-name { font-size:20px; letter-spacing:-.03em; font-weight:600; margin:19px 0 6px; }
+.player-header { display:flex; align-items:center; gap:12px; margin:20px 0 6px; }
+.player-rank-badge { width:30px; height:30px; border-radius:50%; background:var(--wash); border:1px solid var(--line); display:grid; place-items:center; font:700 11px 'DM Mono',monospace; color:var(--ink); flex-shrink:0; }
+.player-name { font-size:20px; letter-spacing:-.03em; font-weight:600; margin:0; }
 .player-sub { color:var(--muted); font:12px 'DM Mono',monospace; }
 .tier { position:absolute; right:14px; top:14px; display:flex; align-items:center; gap:5px; font:500 12px 'DM Mono',monospace; }
 .tier-mark { width:22px; height:22px; background:var(--accent); display:grid; place-items:center; font-weight:600; }

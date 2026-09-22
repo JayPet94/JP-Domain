@@ -4,9 +4,18 @@ const TIER_URLS = {
   half: 'https://s3-us-west-1.amazonaws.com/fftiers/out/weekly-ALL-HALF-PPR.csv',
   ppr: 'https://s3-us-west-1.amazonaws.com/fftiers/out/weekly-ALL-PPR.csv'
 };
+const BORISCHEN_POSITION_URLS = {
+  QB: '/borischen/QB.txt',
+  K: '/borischen/K.txt',
+  DST: '/borischen/DST.txt',
+  RB: '/borischen/RB.txt',
+  WR: '/borischen/WR.txt',
+  TE: '/borischen/TE.txt',
+  FLEX: '/borischen/FLEX.txt'
+};
 const TIER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aeCDrRHeqY2oLdrcqfirsl4bjca3pcjUg3RP5fJrtyc/export?format=csv';
 
-const state = { league: null, rosters: [], allRosters: [], users: [], players: null, tiers: new Map(), season: null, leagueOptions: [], leagueOptionsUsername: null };
+const state = { league: null, rosters: [], allRosters: [], users: [], players: null, tiers: new Map(), positionTiers: {}, season: null, leagueOptions: [], leagueOptionsUsername: null };
 const $ = (id) => document.getElementById(id);
 const message = (text, type = '') => { $('league-message').textContent = text; $('league-message').className = `message ${type}`; };
 const api = async (path) => { const response = await fetch(`${API}${path}`); if (!response.ok) throw new Error(`Sleeper returned ${response.status}`); return response.json(); };
@@ -51,10 +60,54 @@ function resetLeagueOptions() {
 function csvRows(text) {
   return text.trim().split(/\r?\n/).slice(1).map(line => {
     const fields = [...line.matchAll(/(?:^|,)\s*(?:"((?:[^"]|"")*)"|([^,]*))/g)].map(m => (m[1] ?? m[2] ?? '').replace(/""/g, '"').trim());
-    return { rank: Number(fields[0]), name: fields[1], tier: Number(fields[2]), position: fields[3] };
+    return {
+      rank: Number(fields[0]),
+      name: fields[1],
+      tier: Number(fields[2]),
+      position: fields[3],
+      bestRank: Number(fields[4]),
+      worstRank: Number(fields[5]),
+      avgRank: Number(fields[6]),
+      stdDev: Number(fields[7])
+    };
   }).filter(row => row.name && row.position);
 }
 function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function parseBorischenTextTiers(text, sourcePosition) {
+  const rows = new Map();
+  const tierPattern = /Tier\s+(\d+):\s*([\s\S]*?)(?=\s*Tier\s+\d+:|$)/g;
+  let rank = 0;
+  let match;
+  while ((match = tierPattern.exec(text)) !== null) {
+    const tier = Number(match[1]);
+    const section = String(match[2] || '').trim();
+    const players = section.split(',').map(value => value.trim()).filter(Boolean);
+    players.forEach(player => {
+      if (!player) return;
+      const normalized = normalize(player);
+      rank += 1;
+      const tierValue = {
+        position: sourcePosition,
+        tier,
+        rank,
+        source: sourcePosition,
+        displayTier: sourcePosition === 'FLEX' ? `${tier}F` : String(tier),
+        label: sourcePosition === 'FLEX' ? `${tier}F` : String(tier)
+      };
+      rows.set(normalized, tierValue);
+    });
+  }
+  return rows;
+}
+function tierSortValue(player) {
+  if (player?.tier != null) {
+    const tierObject = typeof player.tier === 'object' ? player.tier : { tier: player.tier, source: player.tierSource || 'BASE' };
+    const rankValue = Number(player.rank ?? player.avgRank ?? tierObject.rank ?? 999999);
+    const flexPenalty = tierObject.source === 'FLEX' ? 100000 : 0;
+    return rankValue + flexPenalty;
+  }
+  return Number(player?.rank ?? player?.avgRank ?? 999999);
+}
 function eligible(player, slot) {
   const position = player.position;
   if (slot === 'QB') return position === 'QB';
@@ -79,7 +132,10 @@ function availabilityLabel(player) {
   return player.injuryStatus || player.status || 'Unavailable';
 }
 function slotName(slot) { return slot.replace('SUPER_FLEX', 'SUPERFLEX').replace('_', ' '); }
-function score(player) { return player.rank ?? 9999; }
+function score(player) { return tierSortValue(player); }
+function rankLabel(player) {
+  return player?.tier ?? player?.rank ?? player?.avgRank ?? null;
+}
 function bestLineup(players, slots) {
   const source = 0;
   const playerStart = 1;
@@ -138,50 +194,78 @@ function bestLineup(players, slots) {
   });
   return { lineup, remaining: players.filter(player => !used.has(player.id)), total: lineup.reduce((sum, item) => sum + score(item.player), 0) };
 }
-function tierDataFor(player) { return state.tiers.get(normalize(player.name)) || state.tiers.get(normalize(player.fullName)); }
+function tierDataFor(player, fallbackPosition) {
+  const name = normalize(player.name || player.fullName || '');
+  if (!name) return null;
+  const position = String(player.position || fallbackPosition || '').toUpperCase();
+  const exact = position && state.positionTiers[position] ? state.positionTiers[position].get(name) : null;
+  if (exact) return exact;
+  const flex = state.positionTiers.FLEX ? state.positionTiers.FLEX.get(name) : null;
+  if (flex) return { ...flex, source: 'FLEX', displayTier: `${flex.tier}F`, label: `${flex.tier}F` };
+  return state.tiers.get(name) || state.tiers.get(normalize(player.fullName));
+}
 function displayName(player) { return player.name || player.fullName || 'Unknown player'; }
 function freeAgentUpgrades(roster) {
   const rosteredIds = new Set(state.allRosters.flatMap(item => item.players || []));
   const available = Object.entries(state.players).map(([id, raw]) => {
     const name = `${raw.first_name || ''} ${raw.last_name || ''}`.trim();
     const position = raw.position === 'DEF' || !raw.position && /^[A-Z]{2,3}$/.test(id) ? 'DST' : raw.position;
-    const tier = tierDataFor({ name, fullName: raw.full_name });
-    return { id, name, position, tier, rank: tier?.rank, status: raw.status, injuryStatus: raw.injury_status };
+    const tier = tierDataFor({ name, fullName: raw.full_name, position }, position);
+    return { id, name, position, tier, rank: tier?.rank ?? tier?.avgRank, status: raw.status, injuryStatus: raw.injury_status, avgRank: tier?.avgRank };
   }).filter(player => !rosteredIds.has(player.id) && isAvailable(player) && player.tier && ['QB','RB','WR','TE','K','DST'].includes(player.position));
   const upgrades = [];
   for (const position of ['QB','RB','WR','TE','K','DST']) {
     const topAvailable = available.filter(player => player.position === position).sort((a, b) => score(a) - score(b)).slice(0, 50);
-    const rosterPlayers = buildPlayers(roster).filter(player => player.position === position && player.tier);
+    const rosterPlayers = buildPlayers(roster).filter(player => player.position === position && player.rank != null);
     for (const freeAgent of topAvailable) {
-      const worse = rosterPlayers.filter(player => freeAgent.tier.tier < player.tier.tier).sort((a, b) => b.tier.tier - a.tier.tier || score(b) - score(a))[0];
+      const worse = rosterPlayers.filter(player => score(freeAgent) < score(player)).sort((a, b) => score(a) - score(b))[0];
       if (worse) upgrades.push({ freeAgent, worse });
     }
   }
-  return upgrades.sort((a, b) => a.freeAgent.tier.tier - b.freeAgent.tier.tier || score(a.freeAgent) - score(b.freeAgent));
+  return upgrades.sort((a, b) => score(a.freeAgent) - score(b.freeAgent));
 }
 
-async function loadTiers(scoring) {
-  if (window.BORISCHEN_TIER_CSV) {
-    state.tiers = new Map(csvRows(window.BORISCHEN_TIER_CSV).map(row => [normalize(row.name), row]));
-    return '0.5 PPR';
+function tierMapFromCsv(csvText) {
+  const map = new Map(csvRows(csvText).map(row => [normalize(row.name), row]));
+  state.tiers = map;
+  return map;
+}
+
+async function fetchTierCsv(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response?.ok) return null;
+    return await response.text();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
   }
-  const requested = TIER_URLS[scoring] || TIER_URLS.standard;
-  let response = null;
-  for (const url of [TIER_SHEET_URL, requested]) {
+}
+
+async function loadTiers() {
+  const positionTiers = {};
+  for (const [position, url] of Object.entries(BORISCHEN_POSITION_URLS)) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
     try {
-      response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response?.ok) continue;
+      const text = await response.text();
+      positionTiers[position] = parseBorischenTextTiers(text, position);
     } catch {
-      response = null;
+      positionTiers[position] = new Map();
     } finally {
       clearTimeout(timeout);
     }
-    if (response?.ok) break;
   }
-  if (!response?.ok) throw new Error('Could not load Borischen tier data. Check your internet connection and try again.');
-  state.tiers = new Map(csvRows(await response.text()).map(row => [normalize(row.name), row]));
-  return response.url === TIER_SHEET_URL ? 'standard' : scoring;
+
+  state.positionTiers = positionTiers;
+  state.tiers = new Map();
+  Object.values(positionTiers).forEach(map => map.forEach((value, key) => state.tiers.set(key, value)));
+  return 'Borischen';
 }
 function scoringFormat(league) {
   const receptions = Number(league.scoring_settings?.rec ?? 0);
@@ -193,8 +277,8 @@ function buildPlayers(roster) {
     const raw = state.players[id];
     const name = raw ? `${raw.first_name || ''} ${raw.last_name || ''}`.trim() : id;
     const position = raw?.position === 'DEF' || !raw?.position && /^[A-Z]{2,3}$/.test(id) ? 'DST' : raw?.position;
-    const tier = tierDataFor({ name, fullName: raw?.full_name });
-    return { id, name, position: position || 'UNK', tier, rank: tier?.rank, reserve: reserveIds.has(id), status: raw?.status, injuryStatus: raw?.injury_status };
+    const tier = tierDataFor({ name, fullName: raw?.full_name, position }, position);
+    return { id, name, position: position || 'UNK', tier, rank: tier?.rank ?? tier?.avgRank, reserve: reserveIds.has(id), status: raw?.status, injuryStatus: raw?.injury_status, avgRank: tier?.avgRank };
   }).filter(player => player.position !== 'UNK');
 }
 function renderResults(roster, slots, lineupResult, usedScoring) {
@@ -207,11 +291,13 @@ function renderResults(roster, slots, lineupResult, usedScoring) {
   $('warning').textContent = unmatched.length ? `${unmatched.length} roster item(s) could not be matched to Sleeper's player database.` : '';
   $('lineup-grid').innerHTML = lineupResult ? lineupResult.lineup.map(({slot, player}) => {
     const tier = player.tier;
-    return `<article class="lineup-card"><div class="slot">${escapeHtml(slotName(slot))}</div><div class="tier"><span class="tier-mark">${escapeHtml(tier?.tier ?? '—')}</span> Tier</div><div class="player-name">${escapeHtml(displayName(player))}</div><div class="player-sub">${escapeHtml(player.position)} · ${tier ? `rank ${escapeHtml(tier.rank)}` : 'no tier match'}</div></article>`;
+    const tierLabel = tier?.label ?? (tier ? `T${tier.tier}` : '—');
+    const positionRank = Number(player.rank ?? player.avgRank ?? tier?.rank ?? null);
+    return `<article class="lineup-card"><div class="slot">${escapeHtml(slotName(slot))}</div><div class="tier"><span class="tier-mark">${escapeHtml(tierLabel)}</span> Tier</div><div class="player-header"><div class="player-rank-badge">${positionRank ? escapeHtml(positionRank) : '—'}</div><div class="player-name">${escapeHtml(displayName(player))}</div></div><div class="player-sub">${escapeHtml(player.position)}</div></article>`;
   }).join('') : '<p>No legal lineup could be built from this roster and its slots.</p>';
-  $('bench-list').innerHTML = missing.map(player => `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(player.position)} · ${escapeHtml(!isAvailable(player) ? availabilityLabel(player) : player.tier ? `T${player.tier.tier}` : 'unranked')}</span></div>`).join('') || '<span class="player-sub">No bench players.</span>';
+  $('bench-list').innerHTML = missing.map(player => `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(player.position)} · ${escapeHtml(!isAvailable(player) ? availabilityLabel(player) : player.tier ? `T${player.tier.label ?? player.tier.tier}` : 'unranked')}</span></div>`).join('') || '<span class="player-sub">No bench players.</span>';
   const upgrades = freeAgentUpgrades(roster);
-  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank)}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · Tier ${escapeHtml(worse.tier.tier)}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
+  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.label ?? freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank)}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · Tier ${escapeHtml(worse.tier.label ?? worse.tier.tier)}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
 }
 
 async function loadLeague(leagueId) {

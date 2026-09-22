@@ -1,4 +1,4 @@
-window.BORISCHEN_TIER_CSV = `Rank,Player.Name,Tier,Position,Best.Rank,Worst.Rank,Avg.Rank,Std.Dev
+window.DEFAULT_BORISCHEN_TIER_CSV = `Rank,Player.Name,Tier,Position,Best.Rank,Worst.Rank,Avg.Rank,Std.Dev
 1,Jahmyr Gibbs,1,RB,1,5,1.41,0.88
 2,Ja'Marr Chase,1,WR,2,7,2.47,1.04
 3,Bijan Robinson,1,RB,1,5,2.66,0.93

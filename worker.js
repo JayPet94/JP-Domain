@@ -1,6 +1,15 @@
 const MAX_DATA_BYTES = 200_000;
 const MAX_USERNAME_BYTES = 128;
 const SESSION_COOKIE = 'jp_session';
+const BORISCHEN_ASSET_PATHS = {
+  QB: '/borischen/QB.txt',
+  K: '/borischen/K.txt',
+  DST: '/borischen/DST.txt',
+  RB: '/borischen/RB.txt',
+  WR: '/borischen/WR.txt',
+  TE: '/borischen/TE.txt',
+  FLEX: '/borischen/FLEX.txt'
+};
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -383,6 +392,28 @@ export default {
 
       await env.AUTH_KV.put(`data:${sessionUser.username}`, JSON.stringify(data));
       return json({ data });
+    }
+
+    if (url.pathname.startsWith('/api/borischen/')) {
+      const position = url.pathname.split('/').pop();
+      const assetPath = BORISCHEN_ASSET_PATHS[position];
+      if (!assetPath) return json({ error: 'Unknown Borischen position.' }, 400);
+
+      try {
+        const assetResponse = await env.ASSETS.fetch(new Request(new URL(assetPath, request.url)));
+        if (!assetResponse.ok) {
+          return json({ error: `Borischen feed unavailable (${assetResponse.status}).` }, 502);
+        }
+        return new Response(assetResponse.body, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      } catch (error) {
+        return json({ error: 'Borischen feed fetch failed.' }, 502);
+      }
     }
 
     return env.ASSETS.fetch(request);
