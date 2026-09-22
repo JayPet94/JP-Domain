@@ -8,8 +8,19 @@ html[data-theme="dark"] #league-submit {
   color:var(--accent-ink);
 }
 * { box-sizing:border-box; }
-html { min-height:100%; overflow-x:hidden; touch-action:pan-x pan-y pinch-zoom; }
-body { margin:0; color:var(--ink); background:radial-gradient(circle at 92% 4%, rgba(255,255,255,.12) 0, transparent 18%), linear-gradient(125deg,var(--paper) 0%,var(--surface) 100%); font-family:'Space Grotesk', sans-serif; min-height:100svh; }
+html {
+  min-height:100%;
+  overflow-x:hidden;
+  touch-action:pan-x pan-y pinch-zoom;
+}
+body {
+  margin:0;
+  min-width:320px;
+  color:var(--ink);
+  background:radial-gradient(circle at 92% 4%, rgba(255,255,255,.12) 0, transparent 18%), linear-gradient(125deg,var(--paper) 0%,var(--surface) 100%);
+  font-family:'Space Grotesk', sans-serif;
+  min-height:100svh;
+}
 .shell { width:min(1100px, calc(100% - 32px)); margin:0 auto; padding:52px 0 34px; background:transparent; }
 .back-link { display:inline-flex; align-items:center; justify-content:center; min-height:36px; border:1px solid var(--line); background:transparent; color:var(--ink); font:500 12px 'DM Mono',monospace; text-decoration:none; text-transform:uppercase; letter-spacing:.08em; padding:0 12px; box-sizing:border-box; }
 .utility-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }

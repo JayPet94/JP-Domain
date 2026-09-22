@@ -63,15 +63,26 @@
     }
 
     * { box-sizing:border-box; }
-    html { min-height:100%; overflow-x:hidden; touch-action:pan-x pan-y pinch-zoom; }
+    html {
+      min-height:100%;
+      overflow-x:hidden;
+      touch-action:pan-x pan-y pinch-zoom;
+    }
     body {
       margin:0;
+      min-width:320px;
       color:var(--ink);
       background:radial-gradient(circle at 92% 4%, rgba(255,255,255,.12) 0, transparent 18%), linear-gradient(125deg,var(--paper) 0%,var(--surface) 100%);
       font-family:'Space Grotesk', sans-serif;
       min-height:100svh;
     }
 
+    .shell {
+      width:min(1100px, calc(100% - 32px));
+      margin:0 auto;
+      padding:52px 0 34px;
+      background:transparent;
+    }
 
     .campaign-bar {
       display:flex;
@@ -85,10 +96,17 @@
       flex:1;
       flex-direction:column;
       gap:6px;
-      color:var(--muted);
-      font:500 11px 'DM Mono',monospace;
+      color:var(--ink);
+      font:600 11px 'DM Mono',monospace;
       letter-spacing:.08em;
       text-transform:uppercase;
+    }
+
+    .campaign-controls {
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .campaign-bar select,
@@ -147,6 +165,27 @@
       background:transparent;
       color:var(--ink);
       border:1px solid var(--line);
+    }
+
+    #delete-campaign {
+      background:#cf5d54;
+      color:#fff;
+      border:1px solid rgba(25,33,31,.12);
+      min-height:36px;
+      padding:8px 14px;
+      font:600 13px 'Space Grotesk',sans-serif;
+      margin:2px;
+    }
+
+    td button[onclick*="removePlayer"],
+    td button[onclick*="removeNPC"],
+    .rm-button {
+      background:#cf5d54;
+      color:#fff;
+      border:1px solid rgba(25,33,31,.12);
+      min-height:30px;
+      padding:6px 10px;
+      font:600 12px 'Space Grotesk',sans-serif;
     }
 
     .button-dark {
@@ -438,8 +477,9 @@
           Campaign
           <select id="campaign-select" aria-label="Select campaign"></select>
         </label>
-        <div class="control-group">
+        <div class="campaign-controls">
           <button id="new-campaign" type="button">New campaign</button>
+          <button id="delete-campaign" type="button" class="button-simple">Delete</button>
         </div>
       </div>
 
@@ -844,7 +884,7 @@
             </div>
           </td>
           <td class="damage-cell"><div class="damage-input-wrap"><input type="number" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyPlayerDamage(${i})" aria-label="Apply damage">✓</button></div></td>
-          <td><button type="button" onclick="removePlayer(${i})">X</button></td>
+          <td><button type="button" class="rm-button" onclick="removePlayer(${i})">X</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -944,7 +984,7 @@
             </div>
           </td>
           <td class="damage-cell"><div class="damage-input-wrap"><input type="number" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyNPCDamage(${i})" aria-label="Apply damage">✓</button></div></td>
-          <td><button type="button" onclick="removeNPC(${i})">X</button></td>
+          <td><button type="button" class="rm-button" onclick="removeNPC(${i})">X</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1105,6 +1145,26 @@
       const id = `campaign-${Date.now()}`;
       campaigns[id] = { name: name.trim(), players: [], npcs: [] };
       restoreCampaign(id);
+      renderCampaigns();
+      renderPlayers();
+      renderNPCs();
+      renderInitiativeList();
+      saveData();
+    });
+
+    document.getElementById('delete-campaign').addEventListener('click', () => {
+      const remainingIds = Object.keys(campaigns).filter(id => id !== activeCampaignId);
+      if (!remainingIds.length) {
+        alert('Keep at least one campaign in the tracker.');
+        return;
+      }
+      if (!confirm(`Delete the current campaign, \"${campaigns[activeCampaignId]?.name || activeCampaignId}\"?`)) {
+        return;
+      }
+
+      delete campaigns[activeCampaignId];
+      activeCampaignId = remainingIds[0];
+      restoreCampaign(activeCampaignId);
       renderCampaigns();
       renderPlayers();
       renderNPCs();
