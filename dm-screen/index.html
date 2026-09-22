@@ -10,7 +10,7 @@
         html[data-theme="dark"] { --ink:#e8f0eb; --muted:#a5b5ad; --paper:#17201e; --surface:#1f2b28; --panel:#202b28; --card:#263531; --input:#263531; --line:#40534b; --accent:#68c58d; --accent-ink:#17201e; --coral:#ff8b72; --teal:#73c7bd; --shadow:rgba(0,0,0,.28); }
         * { box-sizing: border-box; }
         html { overflow-x: hidden; touch-action: pan-x pan-y pinch-zoom; }
-        body { font-family: 'Space Grotesk', sans-serif; background: radial-gradient(circle at 92% 0%, #d7eadb 0, transparent 34%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%); color: var(--ink); margin: 0; padding: 0; min-height: 100svh; }
+        body { font-family: 'Space Grotesk', sans-serif; background: radial-gradient(circle at 92% 4%, rgba(215,234,219,.28) 0, transparent 18%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%); color: var(--ink); margin: 0; padding: 0; min-height: 100svh; }
         .container { width: min(1100px, calc(100% - 32px)); margin: 30px auto; background: var(--panel); padding: 24px; border: 1px solid var(--line); box-shadow: 0 14px 40px var(--shadow); }
         h1, h2 { color: var(--teal); }
         h1 { font-size: clamp(2rem, 7vw, 2.8rem); }
@@ -23,12 +23,28 @@
         input[type="number"].hp-input { width: 70px !important; font-size: 1.1em; }
         button { background: var(--accent); color: var(--accent-ink); border: none; padding: 8px 14px; cursor: pointer; margin: 2px; font: 600 13px 'Space Grotesk', sans-serif; }
         button:hover { filter: brightness(1.08); }
+        .damage-apply {
+            width: 28px;
+            min-width: 28px;
+            height: 28px;
+            padding: 0;
+            margin: 0 0 0 6px;
+            font: 600 15px/1 'Space Grotesk', sans-serif;
+            display: inline-grid;
+            place-items: center;
+            background: var(--accent);
+            color: var(--accent-ink);
+        }
         .flex { display: flex; gap: 32px; flex-wrap: wrap; }
         @media (max-width: 900px) { .flex { flex-direction: column; } }
         .conditions-list details { margin-bottom: 8px; line-height: 1.45; }
         .cond-dropdown-menu { background: var(--card) !important; border-color: var(--line) !important; color: var(--ink); }
-        .back-link { display: inline-block; margin-bottom: 18px; color: var(--teal); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; }
-        .theme-toggle { float: right; width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font: 20px/1 'Space Grotesk', sans-serif; }
+        .utility-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .utility-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .utility-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+        .back-link, .utility-button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; }
+        .back-link:hover, .utility-button:hover, .theme-toggle:hover { border-color: var(--teal); color: var(--teal); }
+        .theme-toggle { width: 36px; min-width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font: 20px/1 'Space Grotesk', sans-serif; }
         .campaign-bar { display:flex; align-items:end; gap:10px; margin:18px 0 28px; padding:16px; border:1px solid var(--line); background:var(--card); }
         .campaign-bar label { display:flex; flex:1; flex-direction:column; gap:6px; color:var(--muted); font:500 11px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
         .campaign-bar select { width:100%; padding:10px; border:1px solid var(--line); background:var(--input); color:var(--ink); font:14px 'DM Mono',monospace; }
@@ -46,8 +62,15 @@
 </head>
 <body>
     <div class="container">
-        <a class="back-link" href="../">&larr; Back to Tools</a>
-        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
+        <div class="utility-row">
+            <div class="utility-links">
+                <a class="back-link" href="../">&larr; Back to Tools</a>
+            </div>
+            <div class="utility-actions">
+                <a class="utility-button" href="/cdn-cgi/access/login?redirect_url=https%3A%2F%2Fjasonpetti.com%2F">Log in</a>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
+            </div>
+        </div>
         <h1>D&D 5e DM Screen</h1>
         <div class="campaign-bar">
             <label for="campaign-select">Campaign
@@ -241,7 +264,7 @@
                     <td><input type="number" value="${p.pi||10}" min="0" onchange="updatePlayer(${i}, 'pi', this.value)"></td>
                     <td>
                         <div class="dropdown-conditions" style="position:relative;">
-                            <button type="button" onclick="toggleCondDropdown('player',${i})" style="width:90%;">Select Conditions</button>
+                            <button type="button" onclick="toggleCondDropdown('player',${i})" style="width:90%;">Conditions</button>
                             <div id="player-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
                                 ${builtinConditions.map(cond => `
                                     <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(p.conditions) && p.conditions.includes(cond) ? 'checked' : ''} onchange='togglePlayerCond(${i}, this.value, this.checked)'> ${cond}</label>
@@ -252,7 +275,7 @@
                             <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
                         </div>
                     </td>
-                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button onclick="applyPlayerDamage(${i})">Apply</button></td>
+                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyPlayerDamage(${i})" aria-label="Apply damage">✓</button></td>
                     <td><button onclick="removePlayer(${i})">X</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -336,7 +359,7 @@
                     <td><input type="number" value="${n.pi||10}" min="0" onchange="updateNPC(${i}, 'pi', this.value)"></td>
                     <td>
                         <div class="dropdown-conditions" style="position:relative;">
-                            <button type="button" onclick="toggleCondDropdown('npc',${i})" style="width:90%;">Select Conditions</button>
+                            <button type="button" onclick="toggleCondDropdown('npc',${i})" style="width:90%;">Conditions</button>
                             <div id="npc-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
                                 ${builtinConditions.map(cond => `
                                     <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(n.conditions) && n.conditions.includes(cond) ? 'checked' : ''} onchange='toggleNPCCond(${i}, this.value, this.checked)'> ${cond}</label>
@@ -347,7 +370,7 @@
                             <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
                         </div>
                     </td>
-                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button onclick="applyNPCDamage(${i})">Apply</button></td>
+                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyNPCDamage(${i})" aria-label="Apply damage">✓</button></td>
                     <td><button onclick="removeNPC(${i})">X</button></td>
                 `;
                 tbody.appendChild(tr);
