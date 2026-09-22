@@ -435,8 +435,13 @@ export default {
       const data = sanitizeData(body);
       if (!data) return json({ error: 'Data must be an object under 200 KB.' }, 413);
 
-      await env.AUTH_KV.put(`data:${sessionUser.username}`, JSON.stringify(data));
-      return json({ data });
+      const existingData = await getUserData(env, sessionUser.username);
+      const mergedData = { ...existingData, ...data };
+      const storedData = sanitizeData(mergedData);
+      if (!storedData) return json({ error: 'Data must be an object under 200 KB.' }, 413);
+
+      await env.AUTH_KV.put(`data:${sessionUser.username}`, JSON.stringify(storedData));
+      return json({ data: storedData });
     }
 
     if (url.pathname.startsWith('/api/borischen/')) {
