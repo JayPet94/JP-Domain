@@ -532,13 +532,29 @@
       font-size:12px;
       line-height:1.4;
     }
+    .custom-condition-actions {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-shrink:0;
+    }
+    .custom-condition-edit,
     .custom-condition-remove {
-      background:#cf5d54;
-      color:#fff;
       border:1px solid rgba(25,33,31,.12);
+      color:#fff;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .custom-condition-edit {
+      background:var(--accent);
+      color:var(--ink);
       min-height:28px;
       padding:0 8px;
-      font-size:12px;
+    }
+    .custom-condition-remove {
+      background:#cf5d54;
+      min-height:28px;
+      padding:0 8px;
     }
     .condition-chip {
       display:inline-flex;
@@ -560,14 +576,16 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:12px;
-      height:12px;
+      width:10px;
+      height:10px;
+      min-width:10px;
+      min-height:10px;
       padding:0;
       margin:0;
       border:1px solid rgba(25,33,31,.18);
       background:#cf5d54;
       color:#fff;
-      font:700 9px 'Space Grotesk',sans-serif;
+      font:700 8px 'Space Grotesk',sans-serif;
       line-height:1;
       cursor:pointer;
       border-radius:2px;
@@ -971,13 +989,7 @@
         description: conditionDescriptions[condition] || ''
       }));
 
-      const customEntries = userState.customConditions.map(item => ({
-        name: item.name,
-        description: item.description || 'Custom condition.'
-      }));
-
-      const entries = [...builtInEntries, ...customEntries];
-      container.innerHTML = entries.map(entry => `
+      container.innerHTML = builtInEntries.map(entry => `
         <details>
           <summary data-condition="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</summary>
           <div>${escapeHtml(entry.description)}</div>
@@ -1002,14 +1014,44 @@
               <strong>${escapeHtml(condition.name)}</strong>
               <span>${escapeHtml(condition.description)}</span>
             </div>
-            <button type="button" class="custom-condition-remove" data-custom-condition="${escapeHtml(condition.name)}">Remove</button>
+            <div class="custom-condition-actions">
+              <button type="button" class="custom-condition-edit" data-custom-condition="${escapeHtml(condition.name)}">Edit</button>
+              <button type="button" class="custom-condition-remove" data-custom-condition="${escapeHtml(condition.name)}">Remove</button>
+            </div>
           </li>
         `).join('');
+
+        customList.querySelectorAll('.custom-condition-edit').forEach(button => {
+          button.addEventListener('click', () => {
+            const name = String(button.dataset.customCondition || '').trim();
+            const item = userState.customConditions.find(entry => entry.name.toLowerCase() === name.toLowerCase());
+            if (!item) return;
+
+            const form = document.getElementById('custom-condition-form');
+            const nameInput = form?.querySelector('#custom-condition-name');
+            const descriptionInput = form?.querySelector('#custom-condition-description');
+            if (!form || !nameInput || !descriptionInput) return;
+
+            form.dataset.editingName = item.name;
+            nameInput.value = item.name;
+            descriptionInput.value = item.description;
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) submitButton.textContent = 'Save condition';
+            nameInput.focus();
+          });
+        });
 
         customList.querySelectorAll('.custom-condition-remove').forEach(button => {
           button.addEventListener('click', async () => {
             const name = button.dataset.customCondition || '';
             userState.customConditions = userState.customConditions.filter(item => item.name.toLowerCase() !== name.toLowerCase());
+            const form = document.getElementById('custom-condition-form');
+            if (form?.dataset.editingName && form.dataset.editingName.toLowerCase() === name.toLowerCase()) {
+              form.dataset.editingName = '';
+              form.reset();
+              const submitButton = form.querySelector('button[type="submit"]');
+              if (submitButton) submitButton.textContent = 'Add condition';
+            }
             await persistUserCustomConditions();
             renderConditionReference();
             renderPlayers();
@@ -1035,14 +1077,27 @@
 
       if (!name || !description) return;
 
-      const duplicate = userState.customConditions.find(item => item.name.toLowerCase() === name.toLowerCase());
+      const editingName = String(form.dataset.editingName || '').trim();
+      const duplicate = userState.customConditions.find(item => item.name.toLowerCase() === name.toLowerCase() && item.name.toLowerCase() !== editingName.toLowerCase());
       if (duplicate) {
-        duplicate.description = description;
+        alert('A custom condition with that name already exists.');
+        return;
+      }
+
+      if (editingName) {
+        const item = userState.customConditions.find(entry => entry.name.toLowerCase() === editingName.toLowerCase());
+        if (item) {
+          item.name = name;
+          item.description = description;
+        }
       } else {
         userState.customConditions.push({ name, description });
       }
 
       form.reset();
+      form.dataset.editingName = '';
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.textContent = 'Add condition';
       await persistUserCustomConditions();
       renderConditionReference();
       renderPlayers();
