@@ -236,23 +236,25 @@ function loginPageHtml() {
       </div>
 
       <div class="form-panel">
-        <h2>Create account</h2>
-        <form id="register-form">
+        <h2>Change password</h2>
+        <form id="change-password-form">
           <label>
             Username
             <input name="username" type="text" autocomplete="username" required>
           </label>
           <label>
-            Password
-            <input name="password" type="password" autocomplete="new-password" required>
+            Current password
+            <input name="currentPassword" type="password" autocomplete="current-password" required>
           </label>
-          <button type="submit">Create account</button>
+          <label>
+            New password
+            <input name="newPassword" type="password" autocomplete="new-password" minlength="4" required>
+          </label>
+          <button type="submit">Update password</button>
         </form>
       </div>
-    </div>
 
-    <div id="message" class="message" aria-live="polite"></div>
-  </div>
+      <div class="form-panel">
 
   <script>
     const showMessage = (text, kind) => {
@@ -292,6 +294,7 @@ function loginPageHtml() {
     };
 
     handleSubmit(document.getElementById('login-form'), '/api/auth/login');
+    handleSubmit(document.getElementById('change-password-form'), '/api/auth/change-password');
     handleSubmit(document.getElementById('register-form'), '/api/auth/register');
   </script>
 </body>
@@ -355,6 +358,31 @@ export default {
           'Cache-Control': 'no-store'
         }
       });
+    }
+
+    if (url.pathname === '/api/auth/change-password') {
+      if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+      if (!env.AUTH_KV) return json({ error: 'KV is not configured.' }, 503);
+
+      let body;
+      try { body = await request.json(); } catch { return json({ error: 'Invalid JSON.' }, 400); }
+
+      const username = normalizeUsername(body.username);
+      const currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+      const newPassword = typeof body.newPassword === 'string' ? body.newPassword.trim() : '';
+      if (!username || !currentPassword || !newPassword || newPassword.length < 4) {
+        return json({ error: 'Use your username, current password, and a new password with at least 4 characters.' }, 400);
+      }
+
+      const user = await env.AUTH_KV.get(`user:${username}`, 'json');
+      if (!user) return json({ error: 'User not found.' }, 404);
+
+      const currentHash = await hashPassword(currentPassword);
+      if (user.passwordHash !== currentHash) return json({ error: 'Current password is incorrect.' }, 401);
+
+      const updatedUser = { ...user, username, passwordHash: await hashPassword(newPassword), updatedAt: Date.now() };
+      await env.AUTH_KV.put(`user:${username}`, JSON.stringify(updatedUser));
+      return json({ ok: true, message: 'Password updated.' }, 200);
     }
 
     if (url.pathname === '/api/auth/register') {

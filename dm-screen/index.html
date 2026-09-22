@@ -921,8 +921,9 @@
         userState.authenticated = authenticated;
         userState.username = authenticated ? (result.username || null) : null;
 
-        authLink.textContent = authenticated ? 'Log out' : 'Log in';
-        authLink.setAttribute('aria-label', authenticated ? 'Log out' : 'Log in');
+        const username = authenticated ? (result.username || 'User') : '';
+        authLink.textContent = authenticated ? `${username} • Log out` : 'Log in';
+        authLink.setAttribute('aria-label', authenticated ? `Log out ${username}` : 'Log in');
         authLink.dataset.authenticated = String(authenticated);
 
         if (authenticated) {

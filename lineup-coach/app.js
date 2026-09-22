@@ -295,9 +295,14 @@ function renderResults(roster, slots, lineupResult, usedScoring) {
     const positionRank = Number(player.rank ?? player.avgRank ?? tier?.rank ?? null);
     return `<article class="lineup-card"><div class="slot">${escapeHtml(slotName(slot))}</div><div class="tier"><span class="tier-mark">${escapeHtml(tierLabel)}</span> Tier</div><div class="player-header"><div class="player-rank-badge">${positionRank ? escapeHtml(positionRank) : '—'}</div><div class="player-name">${escapeHtml(displayName(player))}</div></div><div class="player-sub">${escapeHtml(player.position)}</div></article>`;
   }).join('') : '<p>No legal lineup could be built from this roster and its slots.</p>';
-  $('bench-list').innerHTML = missing.map(player => `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(player.position)} · ${escapeHtml(!isAvailable(player) ? availabilityLabel(player) : player.tier ? `T${player.tier.label ?? player.tier.tier}` : 'unranked')}</span></div>`).join('') || '<span class="player-sub">No bench players.</span>';
+  $('bench-list').innerHTML = missing.map(player => {
+    const tierLabel = player.tier ? (player.tier.label ?? player.tier.tier) : null;
+    const rankLabel = player.rank ?? player.avgRank ?? null;
+    const tierText = !isAvailable(player) ? availabilityLabel(player) : tierLabel ? `Tier ${tierLabel}` : 'unranked';
+    return `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(player.position)} · ${escapeHtml(tierText)}${rankLabel != null ? ` · rank ${escapeHtml(rankLabel)}` : ''}</span></div>`;
+  }).join('') || '<span class="player-sub">No bench players.</span>';
   const upgrades = freeAgentUpgrades(roster);
-  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.label ?? freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank)}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · Tier ${escapeHtml(worse.tier.label ?? worse.tier.tier)}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
+  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.label ?? freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank ?? freeAgent.avgRank ?? '—')}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · Tier ${escapeHtml(worse.tier.label ?? worse.tier.tier)} · rank ${escapeHtml(worse.rank ?? worse.avgRank ?? '—')}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
 }
 
 async function loadLeague(leagueId) {
