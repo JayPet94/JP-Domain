@@ -255,6 +255,23 @@ function loginPageHtml() {
       </div>
 
       <div class="form-panel">
+        <h2>Create account</h2>
+        <form id="register-form">
+          <label>
+            Username
+            <input name="username" type="text" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" autocomplete="new-password" required>
+          </label>
+          <button type="submit">Create account</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="message" class="message" aria-live="polite"></div>
+  </div>
 
   <script>
     const showMessage = (text, kind) => {
