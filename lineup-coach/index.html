@@ -13,14 +13,13 @@
         <a class="back-link" href="../">&larr; Back to Tools</a>
       </div>
       <div class="utility-actions">
-        <a class="utility-button" href="/cdn-cgi/access/login?redirect_url=https%3A%2F%2Fjasonpetti.com%2F">Log in</a>
+        <a id="auth-link" class="utility-button" href="/login" aria-label="Log in">Log in</a>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
       </div>
     </div>
     <header class="masthead">
       <div class="kicker">WEEKLY FANTASY FOOTBALL</div>
       <h1>Lineup <em>Coach</em></h1>
-      <p class="lede">Turn your Sleeper roster into a clear start/sit decision using live Boris Chen tiers.</p>
     </header>
 
     <section class="panel setup-panel" aria-labelledby="setup-title">
@@ -98,6 +97,35 @@
       themeToggle.title = dark ? 'Switch to light mode' : 'Switch to night mode';
       themeToggle.setAttribute('aria-pressed', String(dark));
     };
+    const authLink = document.getElementById('auth-link');
+    const syncAuthState = async () => {
+      try {
+        const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+        const result = await response.json().catch(() => ({}));
+        const authenticated = !!result?.authenticated;
+
+        authLink.textContent = authenticated ? 'Log out' : 'Log in';
+        authLink.setAttribute('aria-label', authenticated ? 'Log out' : 'Log in');
+        authLink.dataset.authenticated = String(authenticated);
+
+        if (authenticated) {
+          authLink.href = '#';
+          authLink.onclick = async (event) => {
+            event.preventDefault();
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+            window.location.reload();
+          };
+        } else {
+          authLink.href = '/login';
+          authLink.onclick = null;
+        }
+      } catch {
+        authLink.textContent = 'Log in';
+        authLink.href = '/login';
+        authLink.dataset.authenticated = 'false';
+      }
+    };
+
     themeToggle.addEventListener('click', () => {
       const dark = document.documentElement.dataset.theme === 'dark';
       document.documentElement.dataset.theme = dark ? 'light' : 'dark';
@@ -107,6 +135,7 @@
       updateThemeToggle();
     });
     updateThemeToggle();
+    syncAuthState();
   </script>
 </body>
 </html>

@@ -6,55 +6,204 @@
     <title>D&D 5e DM Screen - Initiative & Condition Tracker</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-        :root { --ink:#19211f; --muted:#687572; --paper:#f4f1e8; --surface:#e9eee3; --panel:#fffdf7; --card:#fff; --input:#fff; --line:#d8d8ca; --accent:#c5e8cb; --accent-ink:#19211f; --coral:#ef765d; --teal:#1a6b67; --shadow:rgba(57,71,50,.08); }
-        html[data-theme="dark"] { --ink:#e8f0eb; --muted:#a5b5ad; --paper:#17201e; --surface:#1f2b28; --panel:#202b28; --card:#263531; --input:#263531; --line:#40534b; --accent:#68c58d; --accent-ink:#17201e; --coral:#ff8b72; --teal:#73c7bd; --shadow:rgba(0,0,0,.28); }
+        :root {
+            --ink:#19211f;
+            --muted:#687572;
+            --paper:#f4f1e8;
+            --surface:#e9eee3;
+            --panel:#fffdf7;
+            --card:#fff;
+            --input:#fff;
+            --line:#d8d8ca;
+            --accent:#c5e8cb;
+            --accent-dark:#8fbe9b;
+            --accent-ink:#19211f;
+            --button-dark:#19211f;
+            --button-dark-ink:#fff;
+            --coral:#ef765d;
+            --teal:#1a6b67;
+            --title-size:clamp(34px,4vw,54px);
+            --title-color:var(--teal);
+            --panel-border:rgba(25,33,31,.14);
+            --wash:#d7eadb;
+            --shadow:rgba(57,71,50,.08);
+            --header-width: 170px;
+        }
+        html[data-theme="dark"] { --ink:#e8f0eb; --muted:#a5b5ad; --paper:#17201e; --surface:#1f2b28; --panel:#202b28; --card:#263531; --input:#263531; --line:#40534b; --accent:#68c58d; --accent-dark:#479b6b; --accent-ink:#17201e; --button-dark:#e8f0eb; --button-dark-ink:#17201e; --coral:#ff8b72; --teal:#73c7bd; --title-color:var(--teal); --panel-border:rgba(232,240,235,.16); --wash:#294a38; --shadow:rgba(0,0,0,.28); }
         * { box-sizing: border-box; }
         html { overflow-x: hidden; touch-action: pan-x pan-y pinch-zoom; }
-        body { font-family: 'Space Grotesk', sans-serif; background: radial-gradient(circle at 92% 4%, rgba(215,234,219,.28) 0, transparent 18%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%); color: var(--ink); margin: 0; padding: 0; min-height: 100svh; }
-        .container { width: min(1100px, calc(100% - 32px)); margin: 30px auto; background: var(--panel); padding: 24px; border: 1px solid var(--line); box-shadow: 0 14px 40px var(--shadow); }
+        body { font-family: 'Space Grotesk', sans-serif; background: radial-gradient(circle at 92% 4%, rgba(255,255,255,.10) 0, transparent 16%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%); color: var(--ink); margin: 0; padding: 0; min-height: 100svh; min-width: 320px; }
+        .container {
+            width: min(1100px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 52px 0 34px;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+        }
+        .utility-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+        .utility-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .utility-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+        .utility-row .back-link { margin-bottom: 0; }
+        .masthead {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin: 0 0 24px;
+        }
+        .kicker {
+            color: var(--teal);
+            font: 500 11px/1.2 'DM Mono', monospace;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
         h1, h2 { color: var(--teal); }
-        h1 { font-size: clamp(2rem, 7vw, 2.8rem); }
-        h2 { font-size: clamp(1.35rem, 4vw, 1.8rem); }
-        .table-scroll { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch; touch-action: pan-x pinch-zoom; }
-        table { width: 100%; min-width: 900px; border-collapse: collapse; margin-bottom: 0; }
-        th, td { border: 1px solid var(--line); padding: 8px; text-align: center; }
-        th { background: color-mix(in srgb, var(--teal) 12%, var(--panel)); }
+        h1 {
+            font-size: var(--title-size);
+            line-height: .92;
+            letter-spacing: -.05em;
+            margin: 0;
+            font-weight: 700;
+            color: var(--title-color);
+        }
+        h1 em { color: var(--title-color); font-style: normal; }
+        h1 em { color: var(--title-color); font-style: normal; }
+        h2 {
+            color: var(--ink);
+            font-size: 27px;
+            letter-spacing: -.04em;
+            margin: 0 0 12px;
+        }
+        .table-scroll { overflow-x: auto; margin-bottom: 18px; -webkit-overflow-scrolling: touch; touch-action: pan-x pinch-zoom; }
+        .table-scroll:last-of-type { margin-bottom: 0; }
+        table {
+            width: 100%; min-width: 820px; border-collapse: collapse; margin-bottom: 0; table-layout: fixed;
+        }
+        th, td { border: 1px solid var(--line); padding: 7px 6px; text-align: center; vertical-align: middle; }
+        th {
+            background: color-mix(in srgb, var(--teal) 12%, var(--panel));
+            color: var(--ink);
+            font: 600 11px 'DM Mono', monospace;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        td { font: 500 13px 'Space Grotesk', sans-serif; }
+        th:first-child, td:first-child { width: var(--header-width); min-width: var(--header-width); text-align: left; }
         input[type="text"], input[type="number"] { width: 90%; max-width: 180px; padding: 7px 4px; background: var(--input); color: var(--ink); border: 1px solid var(--line); border-radius: 0; }
-        input[type="number"].hp-input { width: 70px !important; font-size: 1.1em; }
-        button { background: var(--accent); color: var(--accent-ink); border: none; padding: 8px 14px; cursor: pointer; margin: 2px; font: 600 13px 'Space Grotesk', sans-serif; }
+        input[type="number"].hp-input { width: 68px !important; font-size: 1.1em; }
+        button { background: var(--accent); color: var(--accent-ink); border: 1px solid rgba(25,33,31,.08); padding: 8px 14px; cursor: pointer; margin: 2px; font: 600 13px 'Space Grotesk', sans-serif; border-radius: 0; box-shadow: none; }
         button:hover { filter: brightness(1.08); }
+        .damage-cell { min-width: 90px; }
+        .damage-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .damage-input-wrap input[type="number"] {
+            width: 52px;
+            min-width: 52px;
+            max-width: 52px;
+            padding: 7px 6px;
+            text-align: center;
+        }
         .damage-apply {
-            width: 28px;
-            min-width: 28px;
-            height: 28px;
+            width: 22px;
+            min-width: 22px;
+            height: 22px;
             padding: 0;
-            margin: 0 0 0 6px;
-            font: 600 15px/1 'Space Grotesk', sans-serif;
+            margin: 0;
+            font: 600 12px/1 'Space Grotesk', sans-serif;
             display: inline-grid;
             place-items: center;
             background: var(--accent);
             color: var(--accent-ink);
         }
-        .flex { display: flex; gap: 32px; flex-wrap: wrap; }
+        .entity-row { background: rgba(255,255,255,.15); }
+        .flex { display: flex; gap: 20px; flex-wrap: wrap; }
         @media (max-width: 900px) { .flex { flex-direction: column; } }
         .conditions-list details { margin-bottom: 8px; line-height: 1.45; }
         .cond-dropdown-menu { background: var(--card) !important; border-color: var(--line) !important; color: var(--ink); }
-        .utility-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-        .utility-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-        .utility-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-        .back-link, .utility-button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; }
+        .back-link { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; box-sizing: border-box; }
+        .utility-button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; box-sizing: border-box; }
         .back-link:hover, .utility-button:hover, .theme-toggle:hover { border-color: var(--teal); color: var(--teal); }
-        .theme-toggle { width: 36px; min-width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font: 20px/1 'Space Grotesk', sans-serif; }
-        .campaign-bar { display:flex; align-items:end; gap:10px; margin:18px 0 28px; padding:16px; border:1px solid var(--line); background:var(--card); }
+        .theme-toggle { width: 36px; min-width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); display: inline-flex; align-items: center; justify-content: center; font: 20px/1 'Space Grotesk', sans-serif; line-height: 1; cursor: pointer; box-sizing: border-box; }
+        .panel,
+        .results {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 14px 40px var(--shadow);
+            padding: 28px;
+            margin-bottom: 16px;
+        }
+        .panel-heading,
+        .results-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        .eyebrow,
+        .section-label {
+            display: block;
+            color: var(--teal);
+            font: 500 11px/1.2 'DM Mono', monospace;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .status-dot {
+            width: 12px; height: 12px; background: var(--coral); border-radius: 50%; box-shadow: 0 0 0 5px rgba(231,165,150,.18); margin: 4px 5px 0 0;
+        }
+        .campaign-bar { display:flex; align-items:end; gap:10px; margin:0 0 18px; padding:0; border:none; background:transparent; }
         .campaign-bar label { display:flex; flex:1; flex-direction:column; gap:6px; color:var(--muted); font:500 11px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
-        .campaign-bar select { width:100%; padding:10px; border:1px solid var(--line); background:var(--input); color:var(--ink); font:14px 'DM Mono',monospace; }
+        .campaign-bar select { width:100%; padding:10px; border:1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.12); color: #e8f0eb; font:14px 'DM Mono',monospace; }
+        .control-group { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+        .initiative-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .table-sizing-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+        }
+        .size-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid var(--line);
+            padding: 8px 8px 7px;
+        }
+        .size-control label {
+            margin: 0;
+            color: var(--muted);
+            font: 500 10px 'DM Mono', monospace;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .size-control input[type="range"] {
+            width: 100%;
+            accent-color: var(--teal);
+        }
         button { min-height: 36px; }
         @media (max-width: 600px) {
             .container { width: calc(100% - 20px); margin: 10px auto; padding: 16px; }
             .flex { gap: 20px; }
             .flex > div { min-width: 0 !important; width: 100%; margin-bottom: 20px !important; }
             .table-scroll { margin-right: -16px; padding-right: 16px; }
-            th, td { padding: 6px; }
+            th, td { padding: 5px 4px; }
             button { max-width: 100%; }
             .campaign-bar { align-items:stretch; flex-direction:column; }
         }
@@ -67,89 +216,124 @@
                 <a class="back-link" href="../">&larr; Back to Tools</a>
             </div>
             <div class="utility-actions">
-                <a class="utility-button" href="/cdn-cgi/access/login?redirect_url=https%3A%2F%2Fjasonpetti.com%2F">Log in</a>
+                <a id="auth-link" class="utility-button" href="/login" aria-label="Log in">Log in</a>
                 <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
             </div>
         </div>
-        <h1>D&D 5e DM Screen</h1>
-        <div class="campaign-bar">
-            <label for="campaign-select">Campaign
-                <select id="campaign-select" aria-label="Select campaign"></select>
-            </label>
-            <button id="new-campaign" type="button">New campaign</button>
-        </div>
-        <div class="flex" style="flex-direction:column; gap:0;">
-            <div style="min-width:340px; margin-bottom:32px;">
-                <h2>Players</h2>
-                <div class="table-scroll">
-                <table id="playerTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>HP</th>
-                            <th>Max HP</th>
-                            <th>Initiative</th>
-                            <th>Passive Perception</th>
-                            <th>Passive Insight</th>
-                            <th>Conditions</th>
-                            <th>Damage</th>
-                            <th>Remove</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+        <header class="masthead">
+            <div class="kicker">Dungeons & Dragons</div>
+            <h1>D&D 5e <em>DM Screen</em></h1>
+        </header>
+
+        <section class="panel setup-panel" aria-labelledby="setup-title">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">01 / TRACKER</span>
+                    <h2 id="setup-title">Campaign and roster</h2>
                 </div>
-                <button onclick="addPlayer()">Add Player</button>
+                <span class="status-dot" aria-hidden="true"></span>
             </div>
-            <div style="min-width:340px;">
-                <h2>NPCs / Enemies</h2>
-                <div class="table-scroll">
-                <table id="npcTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>HP</th>
-                            <th>Max HP</th>
-                            <th>Initiative</th>
-                            <th>Passive Perception</th>
-                            <th>Passive Insight</th>
-                            <th>Conditions</th>
-                            <th>Damage</th>
-                            <th>Remove</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+
+            <div class="campaign-bar">
+                <label for="campaign-select">Campaign
+                    <select id="campaign-select" aria-label="Select campaign"></select>
+                </label>
+                <div class="control-group">
+                    <button id="new-campaign" type="button">New campaign</button>
                 </div>
-                <button onclick="addNPC()">Add NPC/Enemy</button>
-                <button onclick="clearAllNPCs()" style="background:#ff4444; margin-left:8px;">Clear All NPCs</button>
-                <button id="undoNpcButton" onclick="undoClearNPCs()" style="background:#ffaa44; margin-left:4px; display:none;">↺ Undo</button>
             </div>
-        </div>
-        <h2>Initiative Order</h2>
-        <ul id="initiativeList" style="background:var(--card); border:1px solid var(--line); border-radius:0; padding:12px; min-height:40px; list-style:none; margin-top:10px;"></ul>
-        <button onclick="renderInitiativeList()">Update Initiative Order</button>
-        <hr style="margin:32px 0; border:1px solid #444;">
-        <div class="conditions-list">
-            <h2>5e Conditions Reference</h2>
-            <details open><summary>Blinded</summary><div>Can't see, fails any ability check that requires sight, attack rolls against have advantage, attack rolls have disadvantage.</div></details>
-            <details><summary>Charmed</summary><div>Can't attack charmer, charmer has advantage on social checks.</div></details>
-            <details><summary>Deafened</summary><div>Can't hear, fails any ability check that requires hearing.</div></details>
-            <details><summary>Frightened</summary><div>Disadvantage on ability checks and attack rolls while source of fear is in line of sight, can't willingly move closer.</div></details>
-            <details><summary>Grappled</summary><div>Speed becomes 0, ends if grappler is incapacitated or removed from reach.</div></details>
-            <details><summary>Incapacitated</summary><div>Can't take actions or reactions.</div></details>
-            <details><summary>Invisible</summary><div>Can't be seen, can attempt to hide, attacks have advantage, attacks against have disadvantage.</div></details>
-            <details><summary>Paralyzed</summary><div>Incapacitated, can't move or speak, fails STR/DEX saves, attacks have advantage, critical if within 5 ft.</div></details>
-            <details><summary>Petrified</summary><div>Transformed into stone, incapacitated, immune to poison/disease, resistant to all damage.</div></details>
-            <details><summary>Poisoned</summary><div>Disadvantage on attack rolls and ability checks.</div></details>
-            <details><summary>Prone</summary><div>Only movement is crawl, disadvantage on attacks, attacks against within 5 ft have advantage, others have disadvantage.</div></details>
-            <details><summary>Restrained</summary><div>Speed 0, attacks against have advantage, attacks have disadvantage, disadvantage on DEX saves.</div></details>
-            <details><summary>Stunned</summary><div>Incapacitated, can't move, can speak only falteringly, fails STR/DEX saves, attacks have advantage.</div></details>
-            <details><summary>Unconscious</summary><div>Incapacitated, can't move or speak, unaware, drops whatever holding, prone, fails STR/DEX saves, attacks have advantage, critical if within 5 ft.</div></details>
-        </div>
+
+            <div class="flex" style="flex-direction:column; gap:0;">
+                <div style="min-width:340px; margin-bottom:20px;">
+                    <h2>Players</h2>
+                    <div class="table-shell">
+                        <div class="table-scroll">
+                        <table id="playerTable" aria-label="Player roster">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>HP</th>
+                                    <th>Max</th>
+                                    <th>Init</th>
+                                    <th>PP</th>
+                                    <th>PI</th>
+                                    <th>Cond</th>
+                                    <th>DMG</th>
+                                    <th>Rm</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        </div>
+                        <div class="table-sizing-panel" data-table="player"></div>
+                    </div>
+                    <button onclick="addPlayer()">Add Player</button>
+                </div>
+                <div style="min-width:340px;">
+                    <h2>NPCs / Enemies</h2>
+                    <div class="table-shell">
+                        <div class="table-scroll">
+                        <table id="npcTable" aria-label="NPC roster">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>HP</th>
+                                    <th>Max</th>
+                                    <th>Init</th>
+                                    <th>PP</th>
+                                    <th>PI</th>
+                                    <th>Cond</th>
+                                    <th>DMG</th>
+                                    <th>Rm</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        </div>
+                        <div class="table-sizing-panel" data-table="npc"></div>
+                    </div>
+                    <button onclick="addNPC()">Add NPC/Enemy</button>
+                    <button onclick="clearAllNPCs()" style="background:#ff4444; margin-left:8px;">Clear All NPCs</button>
+                    <button id="undoNpcButton" onclick="undoClearNPCs()" style="background:#ffaa44; margin-left:4px; display:none;">↺ Undo</button>
+                </div>
+            </div>
+
+            <h2>Initiative Order</h2>
+            <ul id="initiativeList" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,.12); padding:12px; min-height:40px; list-style:none; margin-top:10px;"></ul>
+            <div class="initiative-actions">
+                <button onclick="renderInitiativeList()">Update Initiative Order</button>
+                <button type="button" onclick="clearInitiatives()" style="background:transparent; color:#e8f0eb; border-color:rgba(255,255,255,.2);">Clear Initiative</button>
+            </div>
+        </section>
+
+        <section class="results" aria-labelledby="conditions-title">
+            <div class="results-head">
+                <div>
+                    <span class="eyebrow">02 / CONDITIONS</span>
+                    <h2 id="conditions-title">Reference</h2>
+                </div>
+            </div>
+            <div class="conditions-list">
+                <details open><summary>Blinded</summary><div>Can't see, fails any ability check that requires sight, attack rolls against have advantage, attack rolls have disadvantage.</div></details>
+                <details><summary>Charmed</summary><div>Can't attack charmer, charmer has advantage on social checks.</div></details>
+                <details><summary>Deafened</summary><div>Can't hear, fails any ability check that requires hearing.</div></details>
+                <details><summary>Frightened</summary><div>Disadvantage on ability checks and attack rolls while source of fear is in line of sight, can't willingly move closer.</div></details>
+                <details><summary>Grappled</summary><div>Speed becomes 0, ends if grappler is incapacitated or removed from reach.</div></details>
+                <details><summary>Incapacitated</summary><div>Can't take actions or reactions.</div></details>
+                <details><summary>Invisible</summary><div>Can't be seen, can attempt to hide, attacks have advantage, attacks against have disadvantage.</div></details>
+                <details><summary>Paralyzed</summary><div>Incapacitated, can't move or speak, fails STR/DEX saves, attacks have advantage, critical if within 5 ft.</div></details>
+                <details><summary>Petrified</summary><div>Transformed into stone, incapacitated, immune to poison/disease, resistant to all damage.</div></details>
+                <details><summary>Poisoned</summary><div>Disadvantage on attack rolls and ability checks.</div></details>
+                <details><summary>Prone</summary><div>Only movement is crawl, disadvantage on attacks, attacks against within 5 ft have advantage, others have disadvantage.</div></details>
+                <details><summary>Restrained</summary><div>Speed 0, attacks against have advantage, attacks have disadvantage, disadvantage on DEX saves.</div></details>
+                <details><summary>Stunned</summary><div>Incapacitated, can't move, can speak only falteringly, fails STR/DEX saves, attacks have advantage.</div></details>
+                <details><summary>Unconscious</summary><div>Incapacitated, can't move or speak, unaware, drops whatever holding, prone, fails STR/DEX saves, attacks have advantage, critical if within 5 ft.</div></details>
+            </div>
+        </section>
     </div>
     <script>
         const themeToggle = document.getElementById('theme-toggle');
+        const authLink = document.getElementById('auth-link');
         const savedTheme = localStorage.getItem('jp-domain-theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.documentElement.dataset.theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
@@ -164,6 +348,80 @@
             themeToggle.title = dark ? 'Switch to light mode' : 'Switch to night mode';
             themeToggle.setAttribute('aria-pressed', String(dark));
         };
+        const syncAuthState = async () => {
+            try {
+                const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+                const result = await response.json().catch(() => ({}));
+                const authenticated = !!result?.authenticated;
+                authLink.textContent = authenticated ? 'Log out' : 'Log in';
+                authLink.setAttribute('aria-label', authenticated ? 'Log out' : 'Log in');
+                authLink.dataset.authenticated = String(authenticated);
+                if (authenticated) {
+                    authLink.href = '#';
+                    authLink.onclick = async (event) => {
+                        event.preventDefault();
+                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+                        window.location.reload();
+                    };
+                } else {
+                    authLink.href = '/login';
+                    authLink.onclick = null;
+                }
+            } catch {
+                authLink.textContent = 'Log in';
+                authLink.href = '/login';
+                authLink.dataset.authenticated = 'false';
+            }
+        };
+        function renderTableSizingControls(tableId, itemCount) {
+            const panel = document.querySelector(`.table-sizing-panel[data-table="${tableId}"]`);
+            if (!panel) return;
+            const labels = Array.from(document.querySelectorAll(`#${tableId} thead th`)).map(th => th.textContent.trim() || 'Col');
+            const rowControls = Array.from({ length: Math.max(itemCount, 1) }, (_, index) => {
+                const value = localStorage.getItem(`${tableId}-row-${index}`) || '60';
+                return `
+                    <div class="size-control">
+                        <label for="${tableId}-row-${index}">Row ${index + 1}</label>
+                        <input id="${tableId}-row-${index}" type="range" min="36" max="110" value="${value}" data-table="${tableId}" data-row="${index}" data-kind="row">
+                    </div>
+                `;
+            }).join('');
+            const colControls = labels.map((label, index) => {
+                const value = localStorage.getItem(`${tableId}-col-${index}`) || '120';
+                return `
+                    <div class="size-control">
+                        <label for="${tableId}-col-${index}">${label}</label>
+                        <input id="${tableId}-col-${index}" type="range" min="70" max="260" value="${value}" data-table="${tableId}" data-col="${index}" data-kind="col">
+                    </div>
+                `;
+            }).join('');
+            panel.innerHTML = `${colControls}${rowControls}`;
+
+            panel.querySelectorAll('input[type="range"]').forEach(input => {
+                input.addEventListener('input', (event) => {
+                    const table = document.getElementById(tableId);
+                    const target = event.target;
+                    const rawValue = Number(target.value);
+                    localStorage.setItem(`${tableId}-${target.dataset.kind}-${target.dataset.col ?? target.dataset.row}`, String(rawValue));
+
+                    if (target.dataset.kind === 'col') {
+                        const colIndex = Number(target.dataset.col);
+                        Array.from(table.querySelectorAll('th')).forEach((cell, idx) => {
+                            if (idx === colIndex) cell.style.width = `${rawValue}px`;
+                        });
+                        Array.from(table.querySelectorAll('tbody tr')).forEach(row => {
+                            const cell = row.children[colIndex];
+                            if (cell) cell.style.width = `${rawValue}px`;
+                        });
+                    } else {
+                        const rowIndex = Number(target.dataset.row);
+                        const row = table.querySelectorAll('tbody tr')[rowIndex];
+                        if (row) row.style.height = `${rawValue}px`;
+                    }
+                });
+            });
+        }
+
         themeToggle.addEventListener('click', () => {
             const dark = document.documentElement.dataset.theme === 'dark';
             document.documentElement.dataset.theme = dark ? 'light' : 'dark';
@@ -173,6 +431,7 @@
             updateThemeToggle();
         });
         updateThemeToggle();
+        syncAuthState();
 
         // --- Data ---
         let players = [];
@@ -275,11 +534,12 @@
                             <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
                         </div>
                     </td>
-                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyPlayerDamage(${i})" aria-label="Apply damage">✓</button></td>
+                    <td class="damage-cell"><div class="damage-input-wrap"><input type="number" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyPlayerDamage(${i})" aria-label="Apply damage">✓</button></div></td>
                     <td><button onclick="removePlayer(${i})">X</button></td>
                 `;
                 tbody.appendChild(tr);
             });
+            renderTableSizingControls('playerTable', players.length);
         }
         function addPlayer() {
             players.push({ name: '', hp: 0, maxhp: 0, init: '', pp: 10, pi: 10, conditions: [] });
@@ -370,11 +630,12 @@
                             <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
                         </div>
                     </td>
-                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyNPCDamage(${i})" aria-label="Apply damage">✓</button></td>
+                    <td class="damage-cell"><div class="damage-input-wrap"><input type="number" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyNPCDamage(${i})" aria-label="Apply damage">✓</button></div></td>
                     <td><button onclick="removeNPC(${i})">X</button></td>
                 `;
                 tbody.appendChild(tr);
             });
+            renderTableSizingControls('npcTable', npcs.length);
         }
         function addNPC() {
             npcs.push({ name: '', hp: 0, maxhp: 0, init: '', pp: 10, pi: 10, conditions: [] });
@@ -398,6 +659,14 @@
             renderInitiativeList();
             saveData();
             document.getElementById('undoNpcButton').style.display = 'inline-block';
+        }
+        function clearInitiatives() {
+            players = players.map(p => ({ ...p, init: '' }));
+            npcs = npcs.map(n => ({ ...n, init: '' }));
+            renderPlayers();
+            renderNPCs();
+            renderInitiativeList();
+            saveData();
         }
         function undoClearNPCs() {
             npcs = [...JSON.parse(JSON.stringify(npcBackup)), ...npcs];
