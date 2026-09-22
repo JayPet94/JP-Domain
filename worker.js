@@ -32,7 +32,9 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/login') {
-      return Response.redirect('https://jasonpetti.com/login', 302);
+      const loginUrl = new URL('/cdn-cgi/access/login', url.origin);
+      loginUrl.searchParams.set('redirect_url', url.origin + '/');
+      return Response.redirect(loginUrl.toString(), 302);
     }
 
     if (url.pathname !== '/api/data') return env.ASSETS.fetch(request);

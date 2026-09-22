@@ -301,9 +301,9 @@ const APP_PAGE = `<!DOCTYPE html>
       document.getElementById('status').textContent = 'Loading...';
       await loadData();
     } else {
-      userInfo.innerHTML = '<button onclick="window.location.href=\'https://jasonpetti.com/login\'">Log in</button>';
+      userInfo.innerHTML = '<button onclick="window.location.href=\'/cdn-cgi/access/login?redirect_url=' + encodeURIComponent(window.location.origin + '/') + '\'">Log in</button>';
       addRow.style.display = 'none';
-      document.getElementById('status').innerHTML = '<span class="guest-msg">You are browsing as a guest. <a href="https://jasonpetti.com/login">Log in</a> to store your own data.</span>';
+      document.getElementById('status').innerHTML = '<span class="guest-msg">You are browsing as a guest. <a href="/cdn-cgi/access/login?redirect_url=' + encodeURIComponent(window.location.origin + '/') + '">Log in</a> to store your own data.</span>';
       document.getElementById('data-list').innerHTML = '';
     }
   }
@@ -369,11 +369,11 @@ export default {
     if (path.startsWith('/api/auth/')) return handleAuth(request, path, kv);
     if (path.startsWith('/api/data')) return handleData(request, path, kv);
 
-    // Canonical login page for the public site.
+    // Cloudflare Access login flow.
     if (path === '/login') {
       const session = await getSession(request, kv);
       if (session) return Response.redirect(url.origin + '/app', 302);
-      return Response.redirect('https://jasonpetti.com/login', 302);
+      return Response.redirect(new URL('/cdn-cgi/access/login', url.origin).toString() + '?redirect_url=' + encodeURIComponent(url.origin + '/'), 302);
     }
 
     // Data app page — handled by Worker
