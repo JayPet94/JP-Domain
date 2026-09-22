@@ -10,38 +10,31 @@
         html[data-theme="dark"] { --ink:#e8f0eb; --muted:#a5b5ad; --paper:#17201e; --surface:#1f2b28; --panel:#202b28; --card:#263531; --input:#263531; --line:#40534b; --accent:#68c58d; --accent-ink:#17201e; --coral:#ff8b72; --teal:#73c7bd; --shadow:rgba(0,0,0,.28); }
         * { box-sizing: border-box; }
         html { overflow-x: hidden; touch-action: pan-x pan-y pinch-zoom; }
-        body { font-family:'Space Grotesk', sans-serif; background:radial-gradient(circle at 92% 0%, #d7eadb 0, transparent 34%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%); color:var(--ink); margin:0; padding:0; min-height:100svh; }
-        .container { width:min(1080px, calc(100% - 40px)); margin:40px auto 28px; background:var(--panel); padding:22px; border:1px solid var(--line); box-shadow:0 14px 40px var(--shadow); }
+        body { font-family: 'Space Grotesk', sans-serif; background: radial-gradient(circle at 92% 0%, #d7eadb 0, transparent 34%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%); color: var(--ink); margin: 0; padding: 0; min-height: 100svh; }
+        .container { width: min(1100px, calc(100% - 32px)); margin: 30px auto; background: var(--panel); padding: 24px; border: 1px solid var(--line); box-shadow: 0 14px 40px var(--shadow); }
         h1, h2 { color: var(--teal); }
-        h1 { font-size:clamp(38px,5.5vw,60px); line-height:.9; letter-spacing:-.06em; margin:0 0 18px; font-weight:700; }
-        h2 { font-size:25px; letter-spacing:-.04em; margin:0 0 14px; }
+        h1 { font-size: clamp(2rem, 7vw, 2.8rem); }
+        h2 { font-size: clamp(1.35rem, 4vw, 1.8rem); }
         .table-scroll { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch; touch-action: pan-x pinch-zoom; }
         table { width: 100%; min-width: 900px; border-collapse: collapse; margin-bottom: 0; }
-        th, td { border: 1px solid var(--line); padding: 5px 6px; text-align: center; }
+        th, td { border: 1px solid var(--line); padding: 8px; text-align: center; }
         th { background: color-mix(in srgb, var(--teal) 12%, var(--panel)); }
         input[type="text"], input[type="number"] { width: 90%; max-width: 180px; padding: 7px 4px; background: var(--input); color: var(--ink); border: 1px solid var(--line); border-radius: 0; }
         input[type="number"].hp-input { width: 70px !important; font-size: 1.1em; }
         button { background: var(--accent); color: var(--accent-ink); border: none; padding: 8px 14px; cursor: pointer; margin: 2px; font: 600 13px 'Space Grotesk', sans-serif; }
-        .damage-submit { width:30px; min-width:30px; height:30px; min-height:30px; padding:0; margin-left:3px; font-size:16px; line-height:1; }
-        .damage-control { display:flex; align-items:center; justify-content:center; gap:2px; min-width:88px; }
-        .damage-control input { flex:1 1 auto; width:55px !important; min-width:0; }
         button:hover { filter: brightness(1.08); }
         .flex { display: flex; gap: 32px; flex-wrap: wrap; }
         @media (max-width: 900px) { .flex { flex-direction: column; } }
         .conditions-list details { margin-bottom: 8px; line-height: 1.45; }
         .cond-dropdown-menu { background: var(--card) !important; border-color: var(--line) !important; color: var(--ink); }
-        .back-link { display:inline-block; margin-bottom:0; color:var(--teal); font:500 12px 'DM Mono',monospace; text-decoration:none; text-transform:uppercase; letter-spacing:.08em; }
-        .utility-bar { display:flex; align-items:center; justify-content:space-between; min-height:36px; margin-bottom:18px; }
-        .utility-actions { display:flex; align-items:center; gap:10px; }
-        .auth-toggle { width:74px; height:36px; border:1px solid var(--line); background:transparent; color:var(--ink); padding:0 8px; font:500 11px 'DM Mono',monospace; cursor:pointer; text-transform:uppercase; letter-spacing:.06em; }
-        .theme-toggle { width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font: 20px/1 'Space Grotesk', sans-serif; }
-        .campaign-bar { display:flex; align-items:end; gap:10px; margin:12px 0 20px; padding:12px; border:1px solid var(--line); background:var(--card); }
+        .back-link { display: inline-block; margin-bottom: 18px; color: var(--teal); font: 500 12px 'DM Mono', monospace; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; }
+        .theme-toggle { float: right; width: 36px; height: 36px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font: 20px/1 'Space Grotesk', sans-serif; }
+        .campaign-bar { display:flex; align-items:end; gap:10px; margin:18px 0 28px; padding:16px; border:1px solid var(--line); background:var(--card); }
         .campaign-bar label { display:flex; flex:1; flex-direction:column; gap:6px; color:var(--muted); font:500 11px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
-        .campaign-bar select { width:100%; padding:8px; border:1px solid var(--line); background:var(--input); color:var(--ink); font:14px 'DM Mono',monospace; }
-        .danger-button { background:transparent; color:var(--coral); border:1px solid var(--coral); }
+        .campaign-bar select { width:100%; padding:10px; border:1px solid var(--line); background:var(--input); color:var(--ink); font:14px 'DM Mono',monospace; }
         button { min-height: 36px; }
         @media (max-width: 600px) {
-            .container { width:calc(100% - 28px); margin:28px auto 16px; padding:18px; }
+            .container { width: calc(100% - 20px); margin: 10px auto; padding: 16px; }
             .flex { gap: 20px; }
             .flex > div { min-width: 0 !important; width: 100%; margin-bottom: 20px !important; }
             .table-scroll { margin-right: -16px; padding-right: 16px; }
@@ -53,14 +46,14 @@
 </head>
 <body>
     <div class="container">
-        <div class="utility-bar"><a class="back-link" href="../">&larr; Back to Tools</a><div class="utility-actions"><button id="auth-toggle" class="auth-toggle" type="button">Log in</button><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button></div></div>
+        <a class="back-link" href="../">&larr; Back to Tools</a>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to night mode" title="Switch to night mode">&#9728;</button>
         <h1>D&D 5e DM Screen</h1>
         <div class="campaign-bar">
             <label for="campaign-select">Campaign
                 <select id="campaign-select" aria-label="Select campaign"></select>
             </label>
             <button id="new-campaign" type="button">New campaign</button>
-            <button id="delete-campaign" type="button" class="danger-button">Delete campaign</button>
         </div>
         <div class="flex" style="flex-direction:column; gap:0;">
             <div style="min-width:340px; margin-bottom:32px;">
@@ -248,7 +241,7 @@
                     <td><input type="number" value="${p.pi||10}" min="0" onchange="updatePlayer(${i}, 'pi', this.value)"></td>
                     <td>
                         <div class="dropdown-conditions" style="position:relative;">
-                            <button type="button" onclick="toggleCondDropdown('player',${i})" style="width:90%;">Conditions</button>
+                            <button type="button" onclick="toggleCondDropdown('player',${i})" style="width:90%;">Select Conditions</button>
                             <div id="player-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
                                 ${builtinConditions.map(cond => `
                                     <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(p.conditions) && p.conditions.includes(cond) ? 'checked' : ''} onchange='togglePlayerCond(${i}, this.value, this.checked)'> ${cond}</label>
@@ -259,7 +252,7 @@
                             <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
                         </div>
                     </td>
-                    <td style="min-width:90px;"><div class="damage-control"><input type="number" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button type="button" class="damage-submit" onclick="applyPlayerDamage(${i})" aria-label="Apply player damage" title="Apply damage">&#10003;</button></div></td>
+                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button onclick="applyPlayerDamage(${i})">Apply</button></td>
                     <td><button onclick="removePlayer(${i})">X</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -343,7 +336,7 @@
                     <td><input type="number" value="${n.pi||10}" min="0" onchange="updateNPC(${i}, 'pi', this.value)"></td>
                     <td>
                         <div class="dropdown-conditions" style="position:relative;">
-                            <button type="button" onclick="toggleCondDropdown('npc',${i})" style="width:90%;">Conditions</button>
+                            <button type="button" onclick="toggleCondDropdown('npc',${i})" style="width:90%;">Select Conditions</button>
                             <div id="npc-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
                                 ${builtinConditions.map(cond => `
                                     <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(n.conditions) && n.conditions.includes(cond) ? 'checked' : ''} onchange='toggleNPCCond(${i}, this.value, this.checked)'> ${cond}</label>
@@ -354,7 +347,7 @@
                             <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
                         </div>
                     </td>
-                    <td style="min-width:90px;"><div class="damage-control"><input type="number" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button type="button" class="damage-submit" onclick="applyNPCDamage(${i})" aria-label="Apply enemy damage" title="Apply damage">&#10003;</button></div></td>
+                    <td style="min-width:90px;"><input type="number" style="width:55px;" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button onclick="applyNPCDamage(${i})">Apply</button></td>
                     <td><button onclick="removeNPC(${i})">X</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -499,23 +492,6 @@
             renderInitiativeList();
             saveData();
         });
-        document.getElementById('delete-campaign').addEventListener('click', () => {
-            const campaignIds = Object.keys(campaigns);
-            if (campaignIds.length <= 1) {
-                message('Keep at least one campaign on the DM Screen.');
-                return;
-            }
-            const campaignName = campaigns[activeCampaignId]?.name || 'this campaign';
-            if (!confirm(`Delete ${campaignName}? This cannot be undone.`)) return;
-            delete campaigns[activeCampaignId];
-            activeCampaignId = Object.keys(campaigns)[0];
-            restoreCampaign(activeCampaignId);
-            renderCampaigns();
-            renderPlayers();
-            renderNPCs();
-            renderInitiativeList();
-            saveData();
-        });
         // --- Initial Render ---
         loadData();
         renderCampaigns();
@@ -523,6 +499,5 @@
         renderNPCs();
         loadRemoteScreen();
     </script>
-    <script src="../auth.js"></script>
 </body>
 </html>

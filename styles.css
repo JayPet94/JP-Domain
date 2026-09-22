@@ -1,27 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
 :root {
-  --ink: #19211f;
-  --muted: #687572;
-  --paper: #f4f1e8;
-  --surface: #e9eee3;
-  --line: #d8d8ca;
-  --accent: #c5e8cb;
-  --coral: #ef765d;
-  --teal: #1a6b67;
-  --wash: #d7eadb;
+  --ink: #1f2926;
+  --muted: #6b756f;
+  --paper: #f5f3ec;
+  --line: #d4d8d0;
+  --accent: #c6e4c7;
+  --button: #1f2926;
+  --button-ink: #f5f3ec;
 }
 
 html[data-theme="dark"] {
   --ink: #e8f0eb;
   --muted: #a5b5ad;
   --paper: #17201e;
-  --surface: #1f2b28;
-  --line: #40534b;
-  --accent: #68c58d;
-  --coral: #ff8b72;
-  --teal: #73c7bd;
-  --wash: #294a38;
+  --line: #3b4b45;
+  --accent: #2f5a42;
+  --button: #e8f0eb;
+  --button-ink: #17201e;
 }
 
 * { box-sizing: border-box; }
@@ -31,32 +25,28 @@ body {
   min-width: 320px;
   min-height: 100svh;
   color: var(--ink);
-  background: radial-gradient(circle at 92% 0%, var(--wash) 0, transparent 34%), linear-gradient(125deg, var(--paper) 0%, var(--surface) 100%);
-  font-family: 'Space Grotesk', sans-serif;
+  background: var(--paper);
+  font-family: Georgia, 'Times New Roman', serif;
 }
-.page-shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 40px 0 56px; }
-.utility-bar { display:flex; align-items:center; justify-content:space-between; min-height:36px; margin-bottom:32px; }
-.utility-actions { display:flex; align-items:center; gap:10px; }
-.auth-toggle { width:74px; height:36px; border:1px solid var(--line); background:transparent; color:var(--ink); padding:0 8px; font:500 11px 'DM Mono',monospace; cursor:pointer; text-transform:uppercase; letter-spacing:.06em; }
-button.theme-toggle { width:36px; height:36px; border:1px solid var(--line); background:transparent; color:var(--ink); padding:0; font:20px/1 'Space Grotesk',sans-serif; cursor:pointer; }
-header { border-bottom:1px solid var(--line); padding-bottom:26px; }
-h1 { margin:0; color:var(--ink); font-size:clamp(40px,6vw,72px); font-weight:700; letter-spacing:-.06em; line-height:.9; }
-header p { max-width:560px; margin:16px 0 0; color:var(--muted); font-size:17px; line-height:1.4; }
-section { padding-top:32px; }
-h2 { margin:0 0 18px; color:var(--teal); font:500 11px/1.2 'DM Mono',monospace; letter-spacing:.1em; text-transform:uppercase; }
+.page-shell { position: relative; width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 96px 0 80px; }
+button.theme-toggle { position: absolute; top: 28px; right: 0; width: 36px; height: 36px; border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 0; font: 20px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
+header { border-bottom: 1px solid var(--line); padding-bottom: 34px; }
+h1 { margin: 0; font-size: clamp(42px, 8vw, 68px); font-weight: 400; letter-spacing: -.04em; line-height: 1; }
+header p { margin: 18px 0 0; color: var(--muted); font-size: 18px; line-height: 1.45; }
+section { padding-top: 58px; }
+h2 { margin: 0 0 18px; font-size: 14px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; }
 .tool-list { border-top: 1px solid var(--line); }
-.tool-list a { display:flex; justify-content:space-between; gap:20px; padding:16px 12px; border-bottom:1px solid var(--line); color:var(--ink); font-size:18px; font-weight:600; text-decoration:none; }
+.tool-list a { display: flex; justify-content: space-between; gap: 20px; padding: 22px 12px; border-bottom: 1px solid var(--line); color: var(--ink); font-size: 21px; text-decoration: none; }
 .tool-list a:hover { background: var(--accent); }
 .tool-list a span:last-child { color: var(--muted); }
 @media (max-width: 600px) {
-  .page-shell { width:min(100% - 28px,1080px); padding-top:28px; }
-  .utility-bar { margin-bottom:30px; }
-  h1 { font-size:clamp(38px,12vw,60px); }
+  .page-shell { width: min(100% - 28px, 720px); padding-top: 64px; }
+  h1 { font-size: clamp(40px, 14vw, 60px); }
   header p { font-size: 16px; }
-  .tool-list a { padding:18px 8px; font-size:18px; }
+  .tool-list a { padding: 18px 8px; font-size: 18px; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  .page-shell { padding-top:32px; padding-bottom:48px; }
-  header { padding-bottom:24px; }
-  section { padding-top:34px; }
+  .page-shell { padding-top: 40px; padding-bottom: 48px; }
+  header { padding-bottom: 24px; }
+  section { padding-top: 34px; }
 }
