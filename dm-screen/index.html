@@ -1002,7 +1002,7 @@
         }
 
         if (!userState.customConditions.length) {
-          customList.innerHTML = '<li class="custom-condition-item"><div><strong>No custom conditions yet</strong><span>Use the form above to add one. Saved to your account until you remove it.</span></div></li>';
+          customList.innerHTML = '<li class="custom-condition-item"><div><strong>No custom conditions yet</strong><span>Use the form above to add one for this account.</span></div></li>';
           return;
         }
 
@@ -1604,7 +1604,10 @@
       const menu = document.getElementById(id);
       if (!menu) return;
 
-      const trigger = menu.previousElementSibling;
+      const container = menu.closest('.dropdown-conditions');
+      const trigger = container ? container.querySelector('button') : null;
+      if (!trigger) return;
+
       const isOpen = menu.style.display === 'block';
 
       if (!isOpen) {
@@ -1612,6 +1615,7 @@
         const rect = trigger.getBoundingClientRect();
         const left = Math.min(rect.left, window.innerWidth - menu.offsetWidth - 12);
         const top = Math.min(rect.bottom + 6, window.innerHeight - menu.offsetHeight - 12);
+        menu.style.position = 'fixed';
         menu.style.left = `${Math.max(12, left)}px`;
         menu.style.top = `${Math.max(12, top)}px`;
         menu.style.display = 'block';
