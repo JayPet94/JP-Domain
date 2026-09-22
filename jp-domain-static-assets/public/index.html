@@ -52,13 +52,13 @@
       userInfo.innerHTML = '<span>Hi, <strong>' + escapeHtml(info.username) + '</strong></span> <button onclick="logout()">Logout</button>';
       cta.innerHTML = '<a class="cta-primary" href="/app">Go to My Data</a>';
     } else {
-      userInfo.innerHTML = '<button onclick="window.location.href=\'/login\'">Log in</button>';
-      cta.innerHTML = '<a class="cta-primary" href="/login">Get Started</a><a class="cta-secondary" href="/app">Browse as Guest</a>';
+      userInfo.innerHTML = '<button onclick="window.location.href=\'https://jasonpetti.com/login\'">Log in</button>';
+      cta.innerHTML = '<a class="cta-primary" href="https://jasonpetti.com/login">Get Started</a><a class="cta-secondary" href="/app">Browse as Guest</a>';
     }
   }
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/';
+    window.location.href = 'https://jasonpetti.com/login';
   }
   function escapeHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');

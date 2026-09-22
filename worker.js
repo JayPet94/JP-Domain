@@ -30,6 +30,11 @@ async function getData(env, key) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === '/login') {
+      return Response.redirect('https://jasonpetti.com/login', 302);
+    }
+
     if (url.pathname !== '/api/data') return env.ASSETS.fetch(request);
     if (!env.AUTH_KV) return json({ error: 'KV is not configured.' }, 503);
     const key = userKey(request);

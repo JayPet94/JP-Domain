@@ -301,9 +301,9 @@ const APP_PAGE = `<!DOCTYPE html>
       document.getElementById('status').textContent = 'Loading...';
       await loadData();
     } else {
-      userInfo.innerHTML = '<button onclick="window.location.href=\'/login\'">Log in</button>';
+      userInfo.innerHTML = '<button onclick="window.location.href=\'https://jasonpetti.com/login\'">Log in</button>';
       addRow.style.display = 'none';
-      document.getElementById('status').innerHTML = '<span class="guest-msg">You are browsing as a guest. <a href="/login">Log in</a> to store your own data.</span>';
+      document.getElementById('status').innerHTML = '<span class="guest-msg">You are browsing as a guest. <a href="https://jasonpetti.com/login">Log in</a> to store your own data.</span>';
       document.getElementById('data-list').innerHTML = '';
     }
   }
@@ -369,11 +369,11 @@ export default {
     if (path.startsWith('/api/auth/')) return handleAuth(request, path, kv);
     if (path.startsWith('/api/data')) return handleData(request, path, kv);
 
-    // Login page — handled by Worker
+    // Canonical login page for the public site.
     if (path === '/login') {
       const session = await getSession(request, kv);
       if (session) return Response.redirect(url.origin + '/app', 302);
-      return html(LOGIN_PAGE);
+      return Response.redirect('https://jasonpetti.com/login', 302);
     }
 
     // Data app page — handled by Worker
