@@ -183,9 +183,16 @@
       background:#cf5d54;
       color:#fff;
       border:1px solid rgba(25,33,31,.12);
-      min-height:30px;
-      padding:6px 10px;
+      width:22px;
+      height:22px;
+      min-width:22px;
+      min-height:22px;
+      padding:0;
       font:600 12px 'Space Grotesk',sans-serif;
+      line-height:1;
+      display:block;
+      margin:4px auto;
+      text-align:center;
     }
 
     .button-dark {
@@ -215,12 +222,21 @@
       color:var(--ink);
     }
 
-    .table-shell { margin-top:8px; }
+    .table-shell {
+      margin-top:8px;
+      overflow:visible;
+    }
     .table-scroll {
-      overflow-x:hidden;
+      overflow-x:visible;
+      overflow-y:visible;
       margin-bottom:18px;
       -webkit-overflow-scrolling:touch;
       touch-action:pan-x pinch-zoom;
+    }
+    .roster-column,
+    td,
+    th {
+      overflow:visible;
     }
 
     table {
@@ -253,7 +269,7 @@
 
     th:first-child, td:first-child {
       width:26%;
-      min-width:100px;
+      min-width:110px;
       text-align:left;
     }
 
@@ -262,21 +278,27 @@
     th:nth-child(4), td:nth-child(4),
     th:nth-child(5), td:nth-child(5),
     th:nth-child(6), td:nth-child(6) {
-      width:7%;
-      min-width:36px;
-      max-width:60px;
+      width:9%;
+      min-width:64px;
+      max-width:88px;
     }
 
     th:nth-child(7), td:nth-child(7) {
       width:12%;
-      min-width:72px;
+      min-width:94px;
     }
 
-    th:nth-child(8), td:nth-child(8),
+    th:nth-child(8), td:nth-child(8) {
+      width:9%;
+      min-width:72px;
+      max-width:92px;
+    }
+
     th:nth-child(9), td:nth-child(9) {
-      width:7%;
-      min-width:46px;
-      max-width:58px;
+      width:38px !important;
+      min-width:38px !important;
+      max-width:38px !important;
+      padding:0 !important;
     }
 
     input[type="text"],
@@ -288,24 +310,32 @@
       color:var(--ink);
       border:1px solid var(--line);
       border-radius:0;
+      -moz-appearance:textfield;
+      appearance:textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     input[type="number"].hp-input {
-      width:54px !important;
-      max-width:54px !important;
-      min-width:54px !important;
+      width:72px !important;
+      max-width:72px !important;
+      min-width:72px !important;
       font-size:1em;
       padding-right:18px;
     }
 
     input[type="number"]:not(.hp-input) {
-      width:48px !important;
-      max-width:48px !important;
-      min-width:48px !important;
+      width:64px !important;
+      max-width:64px !important;
+      min-width:64px !important;
       padding-right:18px;
     }
 
-    .damage-cell { min-width:82px; }
+    .damage-cell { min-width:106px; }
     .damage-input-wrap {
       display:flex;
       align-items:center;
@@ -314,9 +344,9 @@
       margin:0 auto;
     }
     .damage-input-wrap input[type="number"] {
-      width:46px;
-      min-width:46px;
-      max-width:46px;
+      width:68px;
+      min-width:68px;
+      max-width:68px;
       padding:5px 16px 5px 6px;
       text-align:center;
     }
@@ -333,9 +363,30 @@
       color:var(--accent-ink);
     }
     .cond-dropdown-menu {
+      position:fixed;
+      z-index:2147483647 !important;
+      isolation:isolate;
       background:var(--card) !important;
       border-color:var(--line) !important;
       color:var(--ink);
+      box-shadow:0 18px 28px rgba(0,0,0,.18);
+      padding:4px 0;
+    }
+    .cond-dropdown-menu label {
+      display:flex !important;
+      align-items:center;
+      gap:6px;
+      padding:1px 8px !important;
+      margin:0 !important;
+      min-height:18px;
+      line-height:1.1;
+      font-size:11px;
+    }
+    .cond-dropdown-menu input[type="checkbox"] {
+      margin:0;
+      width:12px;
+      height:12px;
+      flex:0 0 auto;
     }
 
     .resize-handle {
@@ -344,16 +395,6 @@
       right:-4px;
       width:10px;
       height:100%;
-      cursor:col-resize;
-      user-select:none;
-      touch-action: none;
-      z-index:2;
-    }
-
-    .resize-handle::after {
-      content:"";
-      position:absolute;
-      inset:4px 4px 4px 3px;
       border-right:2px solid var(--line);
       opacity:0;
       transition:opacity .15s ease;
@@ -406,21 +447,199 @@
       flex-wrap:wrap;
     }
 
+    .conditions-list {
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
     .conditions-list details {
-      margin-bottom:8px;
-      line-height:1.45;
+      margin:0;
+      line-height:1.35;
       border-bottom:1px solid var(--line);
-      padding-bottom:8px;
+      padding:6px 0 5px;
     }
     .conditions-list details:last-child { border-bottom:0; }
     .conditions-list summary {
       cursor:pointer;
       font-weight:600;
       color:var(--ink);
+      list-style:none;
     }
+    .conditions-list summary::-webkit-details-marker { display:none; }
     .conditions-list div {
       color:var(--muted);
       margin-top:6px;
+    }
+    .custom-condition-panel {
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--line);
+    }
+    .custom-condition-panel[hidden] {
+      display:none;
+    }
+    .custom-condition-form {
+      display:grid;
+      grid-template-columns: minmax(160px, 220px) minmax(220px, 1fr) auto;
+      gap:10px;
+      align-items:end;
+      margin-top:12px;
+    }
+    .custom-condition-form label {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      font:600 11px 'DM Mono',monospace;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--ink);
+    }
+    .custom-condition-form input {
+      width:100%;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background:var(--input);
+      color:var(--ink);
+      font:14px 'Space Grotesk',sans-serif;
+    }
+    .custom-condition-form button {
+      min-height:38px;
+    }
+    .custom-condition-list {
+      list-style:none;
+      margin:14px 0 0;
+      padding:0;
+      display:grid;
+      gap:8px;
+    }
+    .custom-condition-item {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background:var(--chip-bg);
+    }
+    .custom-condition-item strong {
+      display:block;
+      color:var(--ink);
+      margin-bottom:2px;
+    }
+    .custom-condition-item span {
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .custom-condition-remove {
+      background:#cf5d54;
+      color:#fff;
+      border:1px solid rgba(25,33,31,.12);
+      min-height:28px;
+      padding:0 8px;
+      font-size:12px;
+    }
+    .condition-chip {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding:2px 6px;
+      margin:2px 4px 0 0;
+      border:1px solid var(--line);
+      background:var(--chip-bg);
+      color:var(--ink);
+      font:600 11px 'DM Mono',monospace;
+      cursor:pointer;
+      transition:background .15s ease, border-color .15s ease;
+      position:relative;
+      z-index:1;
+    }
+    .condition-chip-remove {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:12px;
+      height:12px;
+      padding:0;
+      margin:0;
+      border:1px solid rgba(25,33,31,.18);
+      background:#cf5d54;
+      color:#fff;
+      font:700 9px 'Space Grotesk',sans-serif;
+      line-height:1;
+      cursor:pointer;
+      border-radius:2px;
+    }
+    .dropdown-conditions {
+      position:relative;
+      overflow:visible;
+      z-index:999;
+    }
+    td:nth-child(7) {
+      position:relative;
+      z-index:10;
+    }
+    .condition-chip:hover,
+    .condition-chip:focus-visible {
+      background:var(--accent);
+      border-color:var(--teal);
+      outline:none;
+    }
+    .condition-tooltip {
+      position:absolute;
+      left:50%;
+      bottom:calc(100% + 8px);
+      transform:translateX(-50%);
+      width:max-content;
+      max-width:260px;
+      min-width:150px;
+      padding:8px 10px;
+      border:1px solid var(--teal);
+      background:var(--panel);
+      color:var(--ink);
+      box-shadow:0 10px 24px rgba(0,0,0,.12);
+      font:500 11px 'Space Grotesk',sans-serif;
+      line-height:1.4;
+      pointer-events:none;
+      z-index:20;
+      opacity:0;
+      visibility:hidden;
+      transition:opacity .12s ease, visibility .12s ease;
+    }
+    .condition-tooltip.visible {
+      opacity:1;
+      visibility:visible;
+    }
+    .initiative-condition {
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:2px 6px;
+      margin:2px 4px 0 0;
+      border:1px solid var(--line);
+      background:var(--chip-bg);
+      color:var(--ink);
+      font:600 11px 'DM Mono',monospace;
+      cursor:pointer;
+    }
+    .initiative-condition:hover,
+    .initiative-condition:focus-visible {
+      background:var(--accent);
+      border-color:var(--teal);
+      outline:none;
+    }
+    .condition-tooltip::after {
+      content:"";
+      position:absolute;
+      left:50%;
+      top:100%;
+      transform:translateX(-50%);
+      border-width:6px 6px 0 6px;
+      border-style:solid;
+      border-color:var(--teal) transparent transparent transparent;
     }
 
     footer {
@@ -555,63 +774,22 @@
         </div>
       </div>
 
-      <div class="conditions-list">
-        <details open>
-          <summary>Blinded</summary>
-          <div>Can't see, fails ability checks requiring sight, attack rolls against the creature have advantage, and its attacks have disadvantage.</div>
-        </details>
-        <details>
-          <summary>Charmed</summary>
-          <div>Can't attack the charmer or target it with harmful abilities, and the charmer has advantage on social checks against it.</div>
-        </details>
-        <details>
-          <summary>Deafened</summary>
-          <div>Can't hear and automatically fails any ability check that requires hearing.</div>
-        </details>
-        <details>
-          <summary>Frightened</summary>
-          <div>Disadvantage on ability checks and attack rolls while the source of fear is in sight, and it can't willingly move closer to the source.</div>
-        </details>
-        <details>
-          <summary>Grappled</summary>
-          <div>Speed becomes 0, and the condition ends if the grappler is incapacitated or the creature is no longer in reach.</div>
-        </details>
-        <details>
-          <summary>Incapacitated</summary>
-          <div>Can't take actions or reactions.</div>
-        </details>
-        <details>
-          <summary>Invisible</summary>
-          <div>Can't be seen, can hide, attack rolls against it have disadvantage, and its attacks have advantage.</div>
-        </details>
-        <details>
-          <summary>Paralyzed</summary>
-          <div>Incapacitated, can't move or speak, fails STR and DEX saves, and attack rolls against it have advantage.</div>
-        </details>
-        <details>
-          <summary>Petrified</summary>
-          <div>Transformed into stone, incapacitated, immune to poison and disease, and resistant to all damage.</div>
-        </details>
-        <details>
-          <summary>Poisoned</summary>
-          <div>Disadvantage on attack rolls and ability checks.</div>
-        </details>
-        <details>
-          <summary>Prone</summary>
-          <div>Only crawls or stands, has disadvantage on attacks, and attack rolls against it within 5 feet have advantage.</div>
-        </details>
-        <details>
-          <summary>Restrained</summary>
-          <div>Speed becomes 0, attack rolls against it have advantage, and its attacks have disadvantage.</div>
-        </details>
-        <details>
-          <summary>Stunned</summary>
-          <div>Incapacitated, can't move, speaks falteringly, fails STR and DEX saves, and attacks against it have advantage.</div>
-        </details>
-        <details>
-          <summary>Unconscious</summary>
-          <div>Incapacitated, can't move or speak, fails STR and DEX saves, drops held items, and attack rolls against it have advantage.</div>
-        </details>
+      <div id="conditions-list" class="conditions-list"></div>
+
+      <div id="custom-condition-panel" class="custom-condition-panel" hidden>
+        <h3>Custom conditions</h3>
+        <form id="custom-condition-form" class="custom-condition-form" autocomplete="off">
+          <label>
+            Name
+            <input id="custom-condition-name" name="name" type="text" maxlength="60" placeholder="Ex: Hexed" required>
+          </label>
+          <label>
+            Description
+            <input id="custom-condition-description" name="description" type="text" maxlength="220" placeholder="What does this condition do?" required>
+          </label>
+          <button type="submit">Add condition</button>
+        </form>
+        <ul id="custom-condition-list" class="custom-condition-list"></ul>
       </div>
     </section>
 
@@ -641,11 +819,89 @@
       themeToggle.setAttribute('aria-pressed', String(dark));
     };
 
+    const conditionDescriptions = {
+      Blinded: "Can't see, fails ability checks requiring sight, attack rolls against the creature have advantage, and its attacks have disadvantage.",
+      Charmed: "Can't attack the charmer or target it with harmful abilities, and the charmer has advantage on social checks against it.",
+      Deafened: "Can't hear and automatically fails any ability check that requires hearing.",
+      Frightened: "Disadvantage on ability checks and attack rolls while the source of fear is in sight, and it can't willingly move closer to the source.",
+      Grappled: "Speed becomes 0, and the condition ends if the grappler is incapacitated or the creature is no longer in reach.",
+      Incapacitated: "Can't take actions or reactions.",
+      Invisible: "Can't be seen, can hide, attack rolls against it have disadvantage, and its attacks have advantage.",
+      Paralyzed: "Incapacitated, can't move or speak, fails STR and DEX saves, and attack rolls against it have advantage.",
+      Petrified: "Transformed into stone, incapacitated, immune to poison and disease, and resistant to all damage.",
+      Poisoned: "Disadvantage on attack rolls and ability checks.",
+      Prone: "Only crawls or stands, has disadvantage on attacks, and attack rolls against it within 5 feet have advantage.",
+      Restrained: "Speed becomes 0, attack rolls against it have advantage, and its attacks have disadvantage.",
+      Stunned: "Incapacitated, can't move, speaks falteringly, fails STR and DEX saves, and attacks against it have advantage.",
+      Unconscious: "Incapacitated, can't move or speak, fails STR and DEX saves, drops held items, and attack rolls against it have advantage."
+    };
+
+    const userState = {
+      authenticated: false,
+      username: null,
+      customConditions: []
+    };
+
+    async function refreshUserCustomConditions() {
+      if (!userState.authenticated || !userState.username) {
+        userState.customConditions = [];
+        renderConditionReference();
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/data', { credentials: 'same-origin' });
+        if (!response.ok) {
+          userState.customConditions = [];
+          renderConditionReference();
+          return;
+        }
+
+        const result = await response.json().catch(() => ({}));
+        window.__jpDmData = result?.data || {};
+        const items = Array.isArray(window.__jpDmData.customConditions) ? window.__jpDmData.customConditions : [];
+        userState.customConditions = items
+          .filter(item => item && typeof item.name === 'string')
+          .map(item => ({
+            name: item.name.trim(),
+            description: typeof item.description === 'string' ? item.description.trim() : ''
+          }))
+          .filter(item => item.name);
+      } catch {
+        userState.customConditions = [];
+      }
+
+      renderConditionReference();
+    }
+
+    async function persistUserCustomConditions() {
+      if (!userState.authenticated || !userState.username) return;
+      try {
+        const currentData = { ...(window.__jpDmData || {}) };
+        currentData.customConditions = userState.customConditions;
+
+        const response = await fetch('/api/data', {
+          method: 'PATCH',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentData)
+        });
+        if (response.ok) {
+          const result = await response.json().catch(() => ({}));
+          window.__jpDmData = result?.data || { customConditions: userState.customConditions };
+        }
+      } catch {
+        // local-only fallback is intentionally not used for user-specific conditions
+      }
+    }
+
     const syncAuthState = async () => {
       try {
         const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
         const result = await response.json().catch(() => ({}));
         const authenticated = !!result?.authenticated;
+        userState.authenticated = authenticated;
+        userState.username = authenticated ? (result.username || null) : null;
 
         authLink.textContent = authenticated ? 'Log out' : 'Log in';
         authLink.setAttribute('aria-label', authenticated ? 'Log out' : 'Log in');
@@ -662,12 +918,199 @@
           authLink.href = '/login';
           authLink.onclick = null;
         }
+
+        const panel = document.getElementById('custom-condition-panel');
+        if (panel) panel.hidden = !authenticated;
+        if (authenticated) {
+          await refreshUserCustomConditions();
+        } else {
+          userState.customConditions = [];
+          renderConditionReference();
+        }
       } catch {
+        userState.authenticated = false;
+        userState.username = null;
         authLink.textContent = 'Log in';
         authLink.href = '/login';
         authLink.dataset.authenticated = 'false';
+        const panel = document.getElementById('custom-condition-panel');
+        if (panel) panel.hidden = true;
+        userState.customConditions = [];
+        renderConditionReference();
       }
     };
+
+    function getConditionDescription(condition) {
+      const match = String(condition || '').trim();
+      if (!match) return '';
+
+      const custom = userState.customConditions.find(item => item.name.toLowerCase() === match.toLowerCase());
+      if (custom?.description) return custom.description;
+
+      return conditionDescriptions[match] || '';
+    }
+
+    function buildConditionOptions() {
+      const seen = new Set();
+      const result = [];
+      [...builtinConditions, ...userState.customConditions.map(item => item.name)].forEach(name => {
+        const clean = String(name || '').trim();
+        if (!clean || seen.has(clean.toLowerCase())) return;
+        seen.add(clean.toLowerCase());
+        result.push(clean);
+      });
+      return result;
+    }
+
+    function renderConditionReference() {
+      const container = document.getElementById('conditions-list');
+      if (!container) return;
+
+      const builtInEntries = builtinConditions.map(condition => ({
+        name: condition,
+        description: conditionDescriptions[condition] || ''
+      }));
+
+      const customEntries = userState.customConditions.map(item => ({
+        name: item.name,
+        description: item.description || 'Custom condition.'
+      }));
+
+      const entries = [...builtInEntries, ...customEntries];
+      container.innerHTML = entries.map(entry => `
+        <details>
+          <summary data-condition="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</summary>
+          <div>${escapeHtml(entry.description)}</div>
+        </details>
+      `).join('');
+
+      const customList = document.getElementById('custom-condition-list');
+      if (customList) {
+        if (!userState.authenticated) {
+          customList.innerHTML = '<li class="custom-condition-item"><div><strong>Log in</strong><span>Sign in to create conditions that only your account can see.</span></div></li>';
+          return;
+        }
+
+        if (!userState.customConditions.length) {
+          customList.innerHTML = '<li class="custom-condition-item"><div><strong>No custom conditions yet</strong><span>Use the form above to add one for this account.</span></div></li>';
+          return;
+        }
+
+        customList.innerHTML = userState.customConditions.map(condition => `
+          <li class="custom-condition-item">
+            <div>
+              <strong>${escapeHtml(condition.name)}</strong>
+              <span>${escapeHtml(condition.description)}</span>
+            </div>
+            <button type="button" class="custom-condition-remove" data-custom-condition="${escapeHtml(condition.name)}">Remove</button>
+          </li>
+        `).join('');
+
+        customList.querySelectorAll('.custom-condition-remove').forEach(button => {
+          button.addEventListener('click', async () => {
+            const name = button.dataset.customCondition || '';
+            userState.customConditions = userState.customConditions.filter(item => item.name.toLowerCase() !== name.toLowerCase());
+            await persistUserCustomConditions();
+            renderConditionReference();
+            renderPlayers();
+            renderNPCs();
+            renderInitiativeList();
+          });
+        });
+      }
+    }
+
+    document.getElementById('custom-condition-form')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!userState.authenticated || !userState.username) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const form = event.currentTarget;
+      const nameInput = form.querySelector('#custom-condition-name');
+      const descriptionInput = form.querySelector('#custom-condition-description');
+      const name = String(nameInput.value || '').trim();
+      const description = String(descriptionInput.value || '').trim();
+
+      if (!name || !description) return;
+
+      const duplicate = userState.customConditions.find(item => item.name.toLowerCase() === name.toLowerCase());
+      if (duplicate) {
+        duplicate.description = description;
+      } else {
+        userState.customConditions.push({ name, description });
+      }
+
+      form.reset();
+      await persistUserCustomConditions();
+      renderConditionReference();
+      renderPlayers();
+      renderNPCs();
+      renderInitiativeList();
+    });
+
+    function setConditionTooltip(chip, condition) {
+      if (!chip) return;
+
+      let tooltip = chip.querySelector('.condition-tooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'condition-tooltip';
+        chip.appendChild(tooltip);
+      }
+
+      const description = getConditionDescription(condition);
+      if (!description) {
+        tooltip.classList.remove('visible');
+        tooltip.textContent = '';
+        return;
+      }
+
+      tooltip.textContent = description;
+      tooltip.classList.add('visible');
+    }
+
+    function hideConditionTooltip(chip) {
+      if (!chip) return;
+      const tooltip = chip.querySelector('.condition-tooltip');
+      if (tooltip) tooltip.classList.remove('visible');
+    }
+
+    function bindConditionChips() {
+      document.querySelectorAll('.condition-chip').forEach(chip => {
+        const condition = chip.dataset.condition || '';
+        chip.addEventListener('mouseenter', () => setConditionTooltip(chip, condition));
+        chip.addEventListener('mouseleave', () => hideConditionTooltip(chip));
+        chip.addEventListener('focus', () => setConditionTooltip(chip, condition));
+        chip.addEventListener('blur', () => hideConditionTooltip(chip));
+      });
+
+      document.querySelectorAll('.condition-chip-remove').forEach(button => {
+        button.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const condition = button.dataset.condition || '';
+          const row = button.closest('tr');
+          if (!row) return;
+
+          const playerIndex = Array.from(document.querySelectorAll('#playerTable tbody tr')).indexOf(row);
+          const npcIndex = Array.from(document.querySelectorAll('#npcTable tbody tr')).indexOf(row);
+
+          if (playerIndex >= 0) {
+            players[playerIndex].conditions = (players[playerIndex].conditions || []).filter(c => c !== condition);
+            renderPlayers();
+          }
+
+          if (npcIndex >= 0) {
+            npcs[npcIndex].conditions = (npcs[npcIndex].conditions || []).filter(c => c !== condition);
+            renderNPCs();
+          }
+
+          renderInitiativeList();
+          saveData();
+        });
+      });
+    }
 
     function setColumnWidth(tableId, columnIndex, width) {
       const table = document.getElementById(tableId);
@@ -863,6 +1306,13 @@
       players.forEach((p, i) => {
         const tr = document.createElement('tr');
         const conditions = Array.isArray(p.conditions) ? p.conditions : p.conditions ? [p.conditions] : [];
+        const showCustomInput = !!p.customInputOpen;
+        const conditionMarkup = conditions.length ? conditions.map(condition => `
+          <span class="condition-chip" data-condition="${escapeHtml(condition)}" tabindex="0">
+            <span>${escapeHtml(condition)}</span>
+            <button type="button" class="condition-chip-remove" data-condition="${escapeHtml(condition)}" aria-label="Remove ${escapeHtml(condition)} condition">×</button>
+          </span>
+        `).join(' ') : '';
         tr.innerHTML = `
           <td><input type="text" value="${escapeHtml(p.name || '')}" onchange="updatePlayer(${i}, 'name', this.value)"></td>
           <td><input type="number" class="hp-input" value="${p.hp || 0}" min="0" onchange="updatePlayer(${i}, 'hp', this.value)"></td>
@@ -874,13 +1324,13 @@
             <div class="dropdown-conditions" style="position:relative;">
               <button type="button" onclick="toggleCondDropdown('player', ${i})" style="width:90%;">Conditions</button>
               <div id="player-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
-                ${builtinConditions.map(cond => `
-                  <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(p.conditions) && p.conditions.includes(cond) ? 'checked' : ''} onchange='togglePlayerCond(${i}, this.value, this.checked)'> ${cond}</label>
+                ${buildConditionOptions().map(cond => `
+                  <label style='display:flex; align-items:center; gap:6px; padding:1px 8px; margin:0; min-height:18px; line-height:1.1;'><input type='checkbox' value='${cond}' ${Array.isArray(p.conditions) && p.conditions.includes(cond) ? 'checked' : ''} onchange='togglePlayerCond(${i}, this.value, this.checked)'> ${cond}</label>
                 `).join('')}
-                <label style='display:block; padding:2px 8px;'><input type='checkbox' value='Other' ${Array.isArray(p.conditions) && p.conditions.some(c => !builtinConditions.includes(c)) ? 'checked' : ''} onchange='togglePlayerCond(${i}, "Other", this.checked)'> Other...</label>
+                <label style='display:flex; align-items:center; gap:6px; padding:1px 8px; margin:0; min-height:18px; line-height:1.1;'><input type='checkbox' value='Other' ${Array.isArray(p.conditions) && p.conditions.some(c => !buildConditionOptions().includes(c)) ? 'checked' : ''} onchange='togglePlayerCond(${i}, "Other", this.checked)'> Other...</label>
               </div>
-              <input type="text" id="player-cond-other-${i}" style="width:90%; margin-top:2px; display:${conditions.some(c => !builtinConditions.includes(c)) ? 'block' : 'none'}" value="${escapeHtml(conditions.filter(c => !builtinConditions.includes(c)).join(', '))}" placeholder="Custom condition(s), comma separated" onchange="updatePlayerOtherCondition(${i}, this.value)">
-              <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
+              <input type="text" id="player-cond-other-${i}" style="width:90%; margin-top:2px; display:${showCustomInput ? 'block' : 'none'}" value="${escapeHtml(conditions.filter(c => !builtinConditions.includes(c)).join(', '))}" placeholder="Custom condition(s), comma separated" onkeydown="if(event.key==='Enter'){event.preventDefault(); updatePlayerOtherCondition(${i}, this.value); this.blur();}" onchange="updatePlayerOtherCondition(${i}, this.value)">
+              <div style="margin-top:2px; color:var(--ink); font-size:0.95em; line-height:1.4;">${conditionMarkup}</div>
             </div>
           </td>
           <td class="damage-cell"><div class="damage-input-wrap"><input type="number" id="player-dmg-${i}" onkeydown="if(event.key==='Enter'){applyPlayerDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyPlayerDamage(${i})" aria-label="Apply damage">✓</button></div></td>
@@ -888,6 +1338,7 @@
         `;
         tbody.appendChild(tr);
       });
+      bindConditionChips();
       installColumnResizers(document.getElementById('playerTable'));
     }
 
@@ -928,10 +1379,11 @@
       let arr = Array.isArray(players[idx].conditions) ? [...players[idx].conditions] : [];
       if (cond === 'Other') {
         if (checked) {
-          if (!arr.some(c => !builtinConditions.includes(c))) arr.push('');
+          players[idx].customInputOpen = true;
           document.getElementById('player-cond-other-' + idx).style.display = 'block';
         } else {
           arr = arr.filter(c => builtinConditions.includes(c));
+          players[idx].customInputOpen = false;
           document.getElementById('player-cond-other-' + idx).style.display = 'none';
         }
       } else {
@@ -949,9 +1401,14 @@
     }
 
     function updatePlayerOtherCondition(idx, value) {
-      let arr = Array.isArray(players[idx].conditions) ? players[idx].conditions.filter(c => builtinConditions.includes(c)) : [];
+      let arr = Array.isArray(players[idx].conditions)
+        ? players[idx].conditions.filter(c => c !== '' && c !== null && c !== undefined && builtinConditions.includes(c))
+        : [];
       if (value) arr = [...arr, ...value.split(',').map(s => s.trim()).filter(Boolean)];
       players[idx].conditions = arr;
+      players[idx].customInputOpen = false;
+      const input = document.getElementById('player-cond-other-' + idx);
+      if (input) input.style.display = 'none';
       renderPlayers();
       renderInitiativeList();
       saveData();
@@ -963,6 +1420,13 @@
       npcs.forEach((n, i) => {
         const tr = document.createElement('tr');
         const conditions = Array.isArray(n.conditions) ? n.conditions : n.conditions ? [n.conditions] : [];
+        const showCustomInput = !!n.customInputOpen;
+        const conditionMarkup = conditions.length ? conditions.map(condition => `
+          <span class="condition-chip" data-condition="${escapeHtml(condition)}" tabindex="0">
+            <span>${escapeHtml(condition)}</span>
+            <button type="button" class="condition-chip-remove" data-condition="${escapeHtml(condition)}" aria-label="Remove ${escapeHtml(condition)} condition">×</button>
+          </span>
+        `).join(' ') : '';
         tr.innerHTML = `
           <td><input type="text" value="${escapeHtml(n.name || '')}" onchange="updateNPC(${i}, 'name', this.value)"></td>
           <td><input type="number" class="hp-input" value="${n.hp || 0}" min="0" onchange="updateNPC(${i}, 'hp', this.value)"></td>
@@ -974,13 +1438,13 @@
             <div class="dropdown-conditions" style="position:relative;">
               <button type="button" onclick="toggleCondDropdown('npc', ${i})" style="width:90%;">Conditions</button>
               <div id="npc-cond-dropdown-${i}" class="cond-dropdown-menu" style="display:none; position:absolute; background:#222; border:1px solid #444; z-index:10; width:220px; max-height:220px; overflow:auto; left:0;">
-                ${builtinConditions.map(cond => `
-                  <label style='display:block; padding:2px 8px;'><input type='checkbox' value='${cond}' ${Array.isArray(n.conditions) && n.conditions.includes(cond) ? 'checked' : ''} onchange='toggleNPCCond(${i}, this.value, this.checked)'> ${cond}</label>
+                ${buildConditionOptions().map(cond => `
+                  <label style='display:flex; align-items:center; gap:6px; padding:1px 8px; margin:0; min-height:18px; line-height:1.1;'><input type='checkbox' value='${cond}' ${Array.isArray(n.conditions) && n.conditions.includes(cond) ? 'checked' : ''} onchange='toggleNPCCond(${i}, this.value, this.checked)'> ${cond}</label>
                 `).join('')}
-                <label style='display:block; padding:2px 8px;'><input type='checkbox' value='Other' ${Array.isArray(n.conditions) && n.conditions.some(c => !builtinConditions.includes(c)) ? 'checked' : ''} onchange='toggleNPCCond(${i}, "Other", this.checked)'> Other...</label>
+                <label style='display:flex; align-items:center; gap:6px; padding:1px 8px; margin:0; min-height:18px; line-height:1.1;'><input type='checkbox' value='Other' ${Array.isArray(n.conditions) && n.conditions.some(c => !buildConditionOptions().includes(c)) ? 'checked' : ''} onchange='toggleNPCCond(${i}, "Other", this.checked)'> Other...</label>
               </div>
-              <input type="text" id="npc-cond-other-${i}" style="width:90%; margin-top:2px; display:${conditions.some(c => !builtinConditions.includes(c)) ? 'block' : 'none'}" value="${escapeHtml(conditions.filter(c => !builtinConditions.includes(c)).join(', '))}" placeholder="Custom condition(s), comma separated" onchange="updateNPCOtherCondition(${i}, this.value)">
-              <div style="margin-top:2px; color:#ffd700; font-size:0.95em;">${escapeHtml(conditions.join(', '))}</div>
+              <input type="text" id="npc-cond-other-${i}" style="width:90%; margin-top:2px; display:${showCustomInput ? 'block' : 'none'}" value="${escapeHtml(conditions.filter(c => !builtinConditions.includes(c)).join(', '))}" placeholder="Custom condition(s), comma separated" onkeydown="if(event.key==='Enter'){event.preventDefault(); updateNPCOtherCondition(${i}, this.value); this.blur();}" onchange="updateNPCOtherCondition(${i}, this.value)">
+              <div style="margin-top:2px; color:var(--ink); font-size:0.95em; line-height:1.4;">${conditionMarkup}</div>
             </div>
           </td>
           <td class="damage-cell"><div class="damage-input-wrap"><input type="number" id="npc-dmg-${i}" onkeydown="if(event.key==='Enter'){applyNPCDamage(${i})}" placeholder="dmg"><button class="damage-apply" onclick="applyNPCDamage(${i})" aria-label="Apply damage">✓</button></div></td>
@@ -988,6 +1452,7 @@
         `;
         tbody.appendChild(tr);
       });
+      bindConditionChips();
       installColumnResizers(document.getElementById('npcTable'));
     }
 
@@ -1055,10 +1520,11 @@
       let arr = Array.isArray(npcs[idx].conditions) ? [...npcs[idx].conditions] : [];
       if (cond === 'Other') {
         if (checked) {
-          if (!arr.some(c => !builtinConditions.includes(c))) arr.push('');
+          npcs[idx].customInputOpen = true;
           document.getElementById('npc-cond-other-' + idx).style.display = 'block';
         } else {
           arr = arr.filter(c => builtinConditions.includes(c));
+          npcs[idx].customInputOpen = false;
           document.getElementById('npc-cond-other-' + idx).style.display = 'none';
         }
       } else {
@@ -1076,9 +1542,14 @@
     }
 
     function updateNPCOtherCondition(idx, value) {
-      let arr = Array.isArray(npcs[idx].conditions) ? npcs[idx].conditions.filter(c => builtinConditions.includes(c)) : [];
+      let arr = Array.isArray(npcs[idx].conditions)
+        ? npcs[idx].conditions.filter(c => c !== '' && c !== null && c !== undefined && builtinConditions.includes(c))
+        : [];
       if (value) arr = [...arr, ...value.split(',').map(s => s.trim()).filter(Boolean)];
       npcs[idx].conditions = arr;
+      npcs[idx].customInputOpen = false;
+      const input = document.getElementById('npc-cond-other-' + idx);
+      if (input) input.style.display = 'none';
       renderNPCs();
       renderInitiativeList();
       saveData();
@@ -1101,7 +1572,20 @@
       }
 
       combined.forEach(entry => {
-        list.innerHTML += `<li><b>${escapeHtml(entry.init)}</b>: ${escapeHtml(entry.name)} (${escapeHtml(entry.hp)} HP${entry.conditions ? ' | ' + escapeHtml(entry.conditions) : ''})</li>`;
+        const conditionHtml = Array.isArray(entry.conditions) && entry.conditions.length
+          ? entry.conditions.map(condition => `
+              <span class="initiative-condition" data-condition="${escapeHtml(condition)}" tabindex="0">${escapeHtml(condition)}</span>
+            `).join('')
+          : '';
+        list.innerHTML += `<li><b>${escapeHtml(entry.init)}</b>: ${escapeHtml(entry.name)} (${escapeHtml(entry.hp)} HP${conditionHtml ? ' | ' + conditionHtml : ''})</li>`;
+      });
+
+      document.querySelectorAll('.initiative-condition').forEach(chip => {
+        const condition = chip.dataset.condition || '';
+        chip.addEventListener('mouseenter', () => setConditionTooltip(chip, condition));
+        chip.addEventListener('mouseleave', () => hideConditionTooltip(chip));
+        chip.addEventListener('focus', () => setConditionTooltip(chip, condition));
+        chip.addEventListener('blur', () => hideConditionTooltip(chip));
       });
     }
 
@@ -1110,10 +1594,24 @@
       const menu = document.getElementById(id);
       if (!menu) return;
 
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      const trigger = menu.previousElementSibling;
+      const isOpen = menu.style.display === 'block';
+
+      if (!isOpen) {
+        document.body.appendChild(menu);
+        const rect = trigger.getBoundingClientRect();
+        const left = Math.min(rect.left, window.innerWidth - menu.offsetWidth - 12);
+        const top = Math.min(rect.bottom + 6, window.innerHeight - menu.offsetHeight - 12);
+        menu.style.left = `${Math.max(12, left)}px`;
+        menu.style.top = `${Math.max(12, top)}px`;
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
+
       setTimeout(() => {
         document.addEventListener('mousedown', function handler(e) {
-          if (!menu.contains(e.target) && e.target !== menu.previousElementSibling) {
+          if (!menu.contains(e.target) && !trigger.contains(e.target)) {
             menu.style.display = 'none';
             document.removeEventListener('mousedown', handler);
           }
