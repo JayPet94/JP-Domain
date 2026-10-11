@@ -1,15 +1,43 @@
 const MAX_DATA_BYTES = 200_000;
 const MAX_USERNAME_BYTES = 128;
 const SESSION_COOKIE = 'jp_session';
-const BORISCHEN_ASSET_PATHS = {
-  QB: '/borischen/QB.txt',
-  K: '/borischen/K.txt',
-  DST: '/borischen/DST.txt',
-  RB: '/borischen/RB.txt',
-  WR: '/borischen/WR.txt',
-  TE: '/borischen/TE.txt',
-  FLEX: '/borischen/FLEX.txt'
+const BORISCHEN_PAGES_URL = 'https://www.borischen.co/feeds/pages/default?alt=json&max-results=500';
+const BORISCHEN_PAGE_TITLES = {
+  standard: { QB: 'QB', K: 'K', DST: 'DST', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'Flex' },
+  half: { QB: 'QB', K: 'K', DST: 'DST', RB: '0.5 PPR RB', WR: '0.5 PPR WR', TE: '0.5 PPR TE', FLEX: '0.5 PPR Flex' },
+  ppr: { QB: 'QB', K: 'K', DST: 'DST', RB: 'PPR RB', WR: 'PPR WR', TE: 'PPR TE', FLEX: 'PPR Flex' }
 };
+
+function borischenTextUrl(entry) {
+  const html = entry?.content?.$t || '';
+  const match = html.match(/<object\b[^>]*\bdata=["']([^"']+)["']/i);
+  if (!match) return null;
+  try {
+    const url = new URL(match[1]);
+    return url.protocol === 'https:' && url.hostname === 's3-us-west-1.amazonaws.com' && /^\/fftiers\/out\/text_[A-Z0-9-]+\.txt$/.test(url.pathname) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchBorischenPositionTiers(scoring) {
+  const pageResponse = await fetch(BORISCHEN_PAGES_URL);
+  if (!pageResponse.ok) throw new Error('Borischen pages are unavailable.');
+  const entries = (await pageResponse.json()).feed?.entry || [];
+  const titles = BORISCHEN_PAGE_TITLES[scoring];
+  const sources = Object.entries(titles).map(([position, title]) => {
+    const entry = entries.find(item => item.title?.$t === title);
+    const source = borischenTextUrl(entry);
+    if (!source) throw new Error(`Borischen page data missing for ${title}.`);
+    return [position, source];
+  });
+  const results = await Promise.all(sources.map(async ([position, source]) => {
+    const response = await fetch(source);
+    if (!response.ok) throw new Error(`Borischen data unavailable for ${position}.`);
+    return [position, await response.text()];
+  }));
+  return Object.fromEntries(results);
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -444,25 +472,20 @@ export default {
       return json({ data: storedData });
     }
 
-    if (url.pathname.startsWith('/api/borischen/')) {
-      const position = url.pathname.split('/').pop();
-      const assetPath = BORISCHEN_ASSET_PATHS[position];
-      if (!assetPath) return json({ error: 'Unknown Borischen position.' }, 400);
-
+    if (url.pathname === '/api/borischen-tiers') {
+      if (request.method !== 'GET') return json({ error: 'Method not allowed.' }, 405);
+      const scoring = url.searchParams.get('scoring');
+      if (!BORISCHEN_PAGE_TITLES[scoring]) return json({ error: 'Invalid scoring format.' }, 400);
       try {
-        const assetResponse = await env.ASSETS.fetch(new Request(new URL(assetPath, request.url)));
-        if (!assetResponse.ok) {
-          return json({ error: `Borischen feed unavailable (${assetResponse.status}).` }, 502);
-        }
-        return new Response(assetResponse.body, {
+        const positionTiers = await fetchBorischenPositionTiers(scoring);
+        return new Response(JSON.stringify({ positionTiers }), {
           headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Cache-Control': 'no-store',
-            'Access-Control-Allow-Origin': '*'
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'public, max-age=300'
           }
         });
-      } catch (error) {
-        return json({ error: 'Borischen feed fetch failed.' }, 502);
+      } catch {
+        return json({ error: 'Borischen tier data is unavailable.' }, 502);
       }
     }
 
