@@ -1,20 +1,4 @@
 const API = 'https://api.sleeper.app/v1';
-const TIER_URLS = {
-  standard: 'https://s3-us-west-1.amazonaws.com/fftiers/out/weekly-ALL.csv',
-  half: 'https://s3-us-west-1.amazonaws.com/fftiers/out/weekly-ALL-HALF-PPR.csv',
-  ppr: 'https://s3-us-west-1.amazonaws.com/fftiers/out/weekly-ALL-PPR.csv'
-};
-const BORISCHEN_POSITION_URLS = {
-  QB: '/borischen/QB.txt',
-  K: '/borischen/K.txt',
-  DST: '/borischen/DST.txt',
-  RB: '/borischen/RB.txt',
-  WR: '/borischen/WR.txt',
-  TE: '/borischen/TE.txt',
-  FLEX: '/borischen/FLEX.txt'
-};
-const TIER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aeCDrRHeqY2oLdrcqfirsl4bjca3pcjUg3RP5fJrtyc/export?format=csv';
-
 const state = { league: null, rosters: [], allRosters: [], users: [], players: null, tiers: new Map(), positionTiers: {}, season: null, leagueOptions: [], leagueOptionsUsername: null };
 const $ = (id) => document.getElementById(id);
 const message = (text, type = '') => { $('league-message').textContent = text; $('league-message').className = `message ${type}`; };
@@ -56,21 +40,6 @@ function resetLeagueOptions() {
   $('league-select-row').classList.add('hidden');
   $('league-select-label').classList.add('hidden');
   setSubmitLabel('Find leagues');
-}
-function csvRows(text) {
-  return text.trim().split(/\r?\n/).slice(1).map(line => {
-    const fields = [...line.matchAll(/(?:^|,)\s*(?:"((?:[^"]|"")*)"|([^,]*))/g)].map(m => (m[1] ?? m[2] ?? '').replace(/""/g, '"').trim());
-    return {
-      rank: Number(fields[0]),
-      name: fields[1],
-      tier: Number(fields[2]),
-      position: fields[3],
-      bestRank: Number(fields[4]),
-      worstRank: Number(fields[5]),
-      avgRank: Number(fields[6]),
-      stdDev: Number(fields[7])
-    };
-  }).filter(row => row.name && row.position);
 }
 function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 function parseBorischenTextTiers(text, sourcePosition) {
@@ -142,6 +111,17 @@ function bestLineup(players, slots) {
   const slotStart = playerStart + players.length;
   const sink = slotStart + slots.length;
   const graph = Array.from({ length: sink + 1 }, () => []);
+  const flexCosts = new Map();
+  slots.filter(slot => slot === 'FLEX' || slot === 'REC_FLEX').forEach(slot => {
+    const candidates = players.filter(player => isAvailable(player) && eligible(player, slot));
+    candidates.sort((first, second) => {
+      if (first.flexRank != null && second.flexRank != null) return first.flexRank - second.flexRank;
+      if (first.position === 'TE' && ['RB', 'WR'].includes(second.position)) return 1;
+      if (second.position === 'TE' && ['RB', 'WR'].includes(first.position)) return -1;
+      return score(first) - score(second);
+    });
+    flexCosts.set(slot, new Map(candidates.map((player, index) => [player.id, index + 1])));
+  });
   const addEdge = (from, to, capacity, cost) => {
     graph[from].push({ to, capacity, cost, reverse: graph[to].length });
     graph[to].push({ to: from, capacity: 0, cost: -cost, reverse: graph[from].length - 1 });
@@ -149,7 +129,7 @@ function bestLineup(players, slots) {
   players.forEach((player, index) => {
     addEdge(source, playerStart + index, 1, 0);
     slots.forEach((slot, slotIndex) => {
-      if (isAvailable(player) && eligible(player, slot)) addEdge(playerStart + index, slotStart + slotIndex, 1, score(player));
+      if (isAvailable(player) && eligible(player, slot)) addEdge(playerStart + index, slotStart + slotIndex, 1, flexCosts.get(slot)?.get(player.id) ?? score(player));
     });
   });
   slots.forEach((slot, index) => addEdge(slotStart + index, sink, 1, 0));
@@ -225,47 +205,23 @@ function freeAgentUpgrades(roster) {
   return upgrades.sort((a, b) => score(a.freeAgent) - score(b.freeAgent));
 }
 
-function tierMapFromCsv(csvText) {
-  const map = new Map(csvRows(csvText).map(row => [normalize(row.name), row]));
-  state.tiers = map;
-  return map;
-}
-
-async function fetchTierCsv(url) {
+async function loadTiers(scoring) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let response;
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response?.ok) return null;
-    return await response.text();
-  } catch {
-    return null;
+    response = await fetch(`/api/borischen-tiers?scoring=${encodeURIComponent(scoring)}`, { signal: controller.signal });
   } finally {
     clearTimeout(timeout);
   }
-}
-
-async function loadTiers() {
-  const positionTiers = {};
-  for (const [position, url] of Object.entries(BORISCHEN_POSITION_URLS)) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    try {
-      const response = await fetch(url, { signal: controller.signal });
-      if (!response?.ok) continue;
-      const text = await response.text();
-      positionTiers[position] = parseBorischenTextTiers(text, position);
-    } catch {
-      positionTiers[position] = new Map();
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
+  if (!response?.ok) throw new Error('Could not load Borischen tier data. Check your internet connection and try again.');
+  const data = await response.json();
+  const positionTiers = Object.fromEntries(Object.entries(data.positionTiers).map(([position, text]) => [position, parseBorischenTextTiers(text, position)]));
 
   state.positionTiers = positionTiers;
   state.tiers = new Map();
   Object.values(positionTiers).forEach(map => map.forEach((value, key) => state.tiers.set(key, value)));
-  return 'Borischen';
+  return scoring;
 }
 function scoringFormat(league) {
   const receptions = Number(league.scoring_settings?.rec ?? 0);
@@ -278,7 +234,8 @@ function buildPlayers(roster) {
     const name = raw ? `${raw.first_name || ''} ${raw.last_name || ''}`.trim() : id;
     const position = raw?.position === 'DEF' || !raw?.position && /^[A-Z]{2,3}$/.test(id) ? 'DST' : raw?.position;
     const tier = tierDataFor({ name, fullName: raw?.full_name, position }, position);
-    return { id, name, position: position || 'UNK', tier, rank: tier?.rank ?? tier?.avgRank, reserve: reserveIds.has(id), status: raw?.status, injuryStatus: raw?.injury_status, avgRank: tier?.avgRank };
+    const flexRank = state.positionTiers.FLEX?.get(normalize(name))?.rank ?? state.positionTiers.FLEX?.get(normalize(raw?.full_name))?.rank;
+    return { id, name, position: position || 'UNK', tier, rank: tier?.rank ?? tier?.avgRank, flexRank, reserve: reserveIds.has(id), status: raw?.status, injuryStatus: raw?.injury_status, avgRank: tier?.avgRank };
   }).filter(player => player.position !== 'UNK');
 }
 function renderResults(roster, slots, lineupResult, usedScoring) {
@@ -293,16 +250,18 @@ function renderResults(roster, slots, lineupResult, usedScoring) {
     const tier = player.tier;
     const tierLabel = tier?.label ?? (tier ? `T${tier.tier}` : '—');
     const positionRank = Number(player.rank ?? player.avgRank ?? tier?.rank ?? null);
-    return `<article class="lineup-card"><div class="slot">${escapeHtml(slotName(slot))}</div><div class="tier"><span class="tier-mark">${escapeHtml(tierLabel)}</span> Tier</div><div class="player-header"><div class="player-rank-badge">${positionRank ? escapeHtml(positionRank) : '—'}</div><div class="player-name">${escapeHtml(displayName(player))}</div></div><div class="player-sub">${escapeHtml(player.position)}</div></article>`;
+    const positionMark = ['FLEX', 'REC_FLEX'].includes(slot) ? 'F' : player.position === 'DST' ? 'DEF' : player.position;
+    return `<article class="lineup-card"><div class="slot">${escapeHtml(slotName(slot))}</div><div class="tier"><span class="tier-position">${escapeHtml(positionMark)}</span><span class="tier-mark">${escapeHtml(tierLabel)}</span> Tier</div><div class="player-header"><div class="player-rank-badge">${positionRank ? escapeHtml(positionRank) : '—'}</div><div class="player-name">${escapeHtml(displayName(player))}</div></div><div class="player-sub">${escapeHtml(player.position)}</div></article>`;
   }).join('') : '<p>No legal lineup could be built from this roster and its slots.</p>';
   $('bench-list').innerHTML = missing.map(player => {
     const tierLabel = player.tier ? (player.tier.label ?? player.tier.tier) : null;
     const rankLabel = player.rank ?? player.avgRank ?? null;
     const tierText = !isAvailable(player) ? availabilityLabel(player) : tierLabel ? `Tier ${tierLabel}` : 'unranked';
-    return `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(player.position)} · ${escapeHtml(tierText)}${rankLabel != null ? ` · rank ${escapeHtml(rankLabel)}` : ''}</span></div>`;
+    const positionMark = player.position === 'DST' ? 'DEF' : player.position;
+    return `<div class="bench-player">${escapeHtml(displayName(player))} <span>${escapeHtml(positionMark)} · ${escapeHtml(tierText)}${rankLabel != null ? ` · rank ${escapeHtml(rankLabel)}` : ''}</span></div>`;
   }).join('') || '<span class="player-sub">No bench players.</span>';
   const upgrades = freeAgentUpgrades(roster);
-  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.label ?? freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank ?? freeAgent.avgRank ?? '—')}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · Tier ${escapeHtml(worse.tier.label ?? worse.tier.tier)} · rank ${escapeHtml(worse.rank ?? worse.avgRank ?? '—')}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
+  $('waiver-list').innerHTML = upgrades.map(({ freeAgent, worse }) => `<div class="waiver-card"><div class="waiver-player">${escapeHtml(freeAgent.name)}<span>${escapeHtml(freeAgent.position === 'DST' ? 'DEF' : freeAgent.position)} · Tier ${escapeHtml(freeAgent.tier.label ?? freeAgent.tier.tier)} · rank ${escapeHtml(freeAgent.rank ?? freeAgent.avgRank ?? '—')}</span></div><div class="waiver-upgrade">Better than<br>${escapeHtml(worse.name)} · ${escapeHtml(worse.position === 'DST' ? 'DEF' : worse.position)} · Tier ${escapeHtml(worse.tier.label ?? worse.tier.tier)} · rank ${escapeHtml(worse.rank ?? worse.avgRank ?? '—')}</div></div>`).join('') || '<div class="waiver-empty">No higher-tier free agents found in the top 50 at each position.</div>';
 }
 
 async function loadLeague(leagueId) {
